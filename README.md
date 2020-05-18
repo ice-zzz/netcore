@@ -51,7 +51,7 @@
 2. port : http 服务监听的端口,0-65535 请不要重复已占用的端口
 3. name : 给 http 起( mei )个( qiu )名( luan )字( yong )呗 
 
-##### Log
+#####  <span id="logconfig">Log</span>
 
 1. WriteToFile : 是否写入文件,如果这里是 ```false``` 的话,将只会把日志输出到**控制台**
 2. LogFilePath: 如果 ```WriteToFile``` 为 ```false``` 此项无效, 为```true``` 时为日志输出**目录**
@@ -158,7 +158,52 @@ if e, err := entry.Create(); err != nil {
 
 ## Context 内容
 
-​	还没想好,想好再说
+### 日志
+
+#### 如何开启日志
+
+``` toml
+  [WebSocket.log]
+    WriteToFile = true
+    LogFilePath = "./logs/websocket/"
+    ZipTime = 2
+    ChannelSize = 25
+    
+  [http.log]
+    WriteToFile = true
+    LogFilePath = "./logs/http/"
+    ZipTime = 2
+    ChannelSize = 25
+
+```
+
+将服务的日志配置项当中的 ```WriteToFile``` 改为 ```true``` ,并且配置剩余选项,即可开启日志服务,配置详情参考**[日志配置](#logconfig)**
+
+#### 如何使用日志
+
+> 日志分为主要的三个级别 一个是 ```info```  和 ```debug```用来存储日常信息, 另个一个是 ```error``` 当系统报错的时候使用
+
+1. Debug
+
+   ``` go
+   log.Debugf(format string, v ...interface{})
+   ```
+
+2. Info
+
+   ```go
+   log.Infof(format string, v ...interface{})
+   ```
+
+3. Error
+
+   ```go
+   log.Errorf(format string, v ...interface{})
+   ```
+
+```format``` 支持所有 ```Golang``` 占位符语法
+
+### 系统监控
 
 ## Libs 引用库
 
