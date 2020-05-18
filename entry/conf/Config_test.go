@@ -12,19 +12,24 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package main
+package conf
 
 import (
 	"fmt"
+	"os"
+	"syscall"
+	"testing"
 
-	"git.bitcode.work/ice/netcore/entry"
+	"github.com/BurntSushi/toml"
 )
 
-func main() {
-	if e, err := entry.Create(); err != nil {
-		fmt.Printf("启动异常: %s", err.Error())
-	} else {
-		e.Start()
-		e.ExitSignalMonitor()
+func TestReadPlatformConfig(t *testing.T) {
+	platformconfig := "./config.toml"
+	plconfig := &PlatformConfig{}
+
+	file, _ := os.OpenFile(platformconfig, syscall.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err := toml.NewEncoder(file).Encode(plconfig); err != nil {
+		fmt.Println(err.Error())
 	}
+
 }

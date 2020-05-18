@@ -12,19 +12,4 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package main
-
-import (
-	"fmt"
-
-	"git.bitcode.work/ice/netcore/entry"
-)
-
-func main() {
-	if e, err := entry.Create(); err != nil {
-		fmt.Printf("启动异常: %s", err.Error())
-	} else {
-		e.Start()
-		e.ExitSignalMonitor()
-	}
-}
+package network

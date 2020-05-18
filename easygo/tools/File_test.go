@@ -12,19 +12,28 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package main
+package tools
 
 import (
 	"fmt"
-
-	"git.bitcode.work/ice/netcore/entry"
+	"os"
+	"testing"
+	"time"
 )
 
-func main() {
-	if e, err := entry.Create(); err != nil {
-		fmt.Printf("启动异常: %s", err.Error())
-	} else {
-		e.Start()
-		e.ExitSignalMonitor()
-	}
+func TestCreateFile(t *testing.T) {
+
+	file, _ := CreateFile("./aaa/bbb.json")
+	file.Write([]byte("123123123123"))
+	file.Close()
+	fileTime := time.Now().Format("2006-01-02")
+	newPath := fmt.Sprintf("./aaa/errors_%s.log", fileTime)
+	_ = os.Rename("./aaa/bbb.json", newPath)
+	file, _ = os.OpenFile("./aaa/bbb.json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	oldFile, _ := os.OpenFile(newPath, os.O_WRONLY, 0644)
+	_ = Compress([]*os.File{oldFile}, fmt.Sprintf("%s_debug.tar.gz", fileTime))
+	oldFile.Close()
+	_ = os.Remove(newPath)
+	file.Write([]byte("sdfsdfsdfsdfsdf"))
+	file.Close()
 }
