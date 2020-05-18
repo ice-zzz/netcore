@@ -5,7 +5,7 @@
 # IntelliJ project files
 .idea
 *.iml
-logs
+*.log
 out
 gen
 ### Go template
@@ -25,3 +25,10 @@ gen
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+/logs/
+/logs/http/
+/logs/websocket/error.log
+/logs/http/error.log
+/logs/websocket/
+/logs/websocket/info.log
+/logs/http/info.log
