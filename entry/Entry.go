@@ -81,6 +81,14 @@ func (e *Entry) Start() {
 
 }
 
+func (e *Entry) GetHttp() *network.HttpServer {
+	return e.httpService
+}
+
+func (e *Entry) GetWebSocket() *network.WebSocketServer {
+	return e.webSocketService
+}
+
 func (e *Entry) ExitSignalMonitor() {
 	e.exitChannel = make(chan os.Signal, 1)
 	signal.Notify(e.exitChannel, syscall.SIGINT, syscall.SIGTERM)
