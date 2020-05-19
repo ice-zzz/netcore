@@ -364,7 +364,7 @@ func (k *Kqueue) wait(onError func(error)) {
 		k.mu.RLock()
 		for i := 0; i < n; i++ {
 			fd := int(evs[i].Ident)
-			if fd == -1 { //todo
+			if fd == -1 { // todo
 				k.mu.RUnlock()
 				return
 			}

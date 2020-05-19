@@ -91,7 +91,7 @@ message PingResponse {
 
 > 在```main.go```的```main```程序入口当中写下面的代码可以创建一个服务器
 
-```golang
+```go
   if e, err := entry.Create(); err != nil {
 		fmt.Printf("启动异常: %s", err.Error())
 	} else {
@@ -151,8 +151,6 @@ if e, err := entry.Create(); err != nil {
 		e.ExitSignalMonitor()
 	}
 ```
-
-
 
 
 
