@@ -14,6 +14,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/segmentio/ksuid v1.0.2
+	github.com/shirou/gopsutil v2.20.4+incompatible
 	golang.org/x/sys v0.0.0-20200511232937-7e40ca221e25
 	golang.org/x/text v0.3.2 // indirect
 

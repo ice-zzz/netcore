@@ -12,14 +12,16 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package main
+package entry
 
 import (
-	"git.bitcode.work/ice/netcore/entry"
+	"fmt"
+	"testing"
+
+	"github.com/shirou/gopsutil/disk"
 )
 
-func main() {
-
-	entry.Cli()
-
+func TestDiskUsage2(t *testing.T) {
+	v, _ := disk.Usage("/")
+	fmt.Printf("%s", v)
 }

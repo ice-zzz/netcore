@@ -209,19 +209,30 @@ if e, err := entry.Create(); err != nil {
     安装方式:
     ```$ go get -u github.com/golang/protobuf```
     首次安装ProtoBuff需要安装生成工具[protoc](https://developers.google.com/protocol-buffers/).
+    
 -   [UUID](http://github.com/satori/go.uuid): UUID 生成
     安装方式:
     ```$ go get -u github.com/satori/go.uuid```
+    
 -   [x-net](http://golang.org/x/net ): Golang 网络扩展库Websocket
     安装方式:
     ```$ go get -u golang.org/x/net```
+    
 -  [g-toml](http://github.com/BurntSushi/toml): Toml 配置文件
     安装方式:
     ```go get -u github.com/BurntSushi/toml```
+    
 -   [gin](http://github.com/BurntSushi/toml): Gin Web服务
     安装方式:
     ```go get -u github.com/gin-gonic/gin```
+    
 -   [ksuid](http://github.com/segmentio/ksuidl): 不重复的ID生成
     安装方式:
     ```go get -u github.com/segmentio/ksuid```
+    
+-   [gopsutil](https://github.com/shirou/gopsutil ) 系统信息读取
+
+    安装方式:
+
+    ```go get -u github.com/shirou/gopsutil ```
 

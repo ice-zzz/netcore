@@ -19,6 +19,5 @@ import (
 )
 
 func TestEntry_Run(t *testing.T) {
-	e := &Entry{}
-	e.Run()
+
 }

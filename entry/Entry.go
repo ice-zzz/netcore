@@ -61,6 +61,11 @@ func Create() (entry *Entry, err error) {
 		LogFilePath: "",
 		ZipTime:     0,
 	})
+	// 初始化系统监控服务
+	go func() {
+
+	}()
+
 	// 初始化http服务
 	entry.httpService = network.CreateHttp(entry.pConfig.Http)
 

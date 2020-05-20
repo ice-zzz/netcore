@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"syscall"
 
 	"git.bitcode.work/ice/netcore/easygo/tools"
 	network "git.bitcode.work/ice/netcore/net"
@@ -45,6 +46,13 @@ type SystemConfig struct {
 }
 
 func ReadPlatformConfig() (*PlatformConfig, error) {
+	var file *os.File
+
+	defer func() {
+		if file != nil {
+			_ = file.Close()
+		}
+	}()
 	platformconfig := fmt.Sprintf("%s/%s", confpath, "config.toml")
 	plconfig := &PlatformConfig{}
 
@@ -70,5 +78,23 @@ func ReadConfigWithFile(path string) ([]byte, error) {
 		return confBytes, nil
 	}
 	return nil, errors.New("Config file is not exists! ")
+
+}
+
+func CreatConfig() {
+	var file *os.File
+
+	defer func() {
+		if file != nil {
+			_ = file.Close()
+		}
+	}()
+	platformconfig := "./config.toml"
+	plconfig := &PlatformConfig{}
+
+	file, _ = os.OpenFile(platformconfig, syscall.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err := toml.NewEncoder(file).Encode(plconfig); err != nil {
+		fmt.Println(err.Error())
+	}
 
 }
