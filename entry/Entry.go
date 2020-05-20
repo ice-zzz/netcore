@@ -15,14 +15,17 @@
 package entry
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 
 	"git.bitcode.work/ice/netcore/easygo/logs"
 	"git.bitcode.work/ice/netcore/entry/conf"
 	network "git.bitcode.work/ice/netcore/net"
+	"github.com/shirou/gopsutil/load"
 )
 
 var (
@@ -63,6 +66,28 @@ func Create() (entry *Entry, err error) {
 	})
 	// 初始化系统监控服务
 	go func() {
+		for {
+			disk := GetDiskInfo()
+			if disk.UsedPercent >= float64(85) {
+				fmt.Printf("磁盘快满了")
+			}
+			v, _ := load.Avg()
+			tCpus := float64(runtime.NumCPU())
+
+			if v.Load1 > tCpus && v.Load5 < tCpus && v.Load15 < tCpus {
+				fmt.Printf("服务器抖动, 较小概率堵塞预警")
+			} else if v.Load1 > tCpus && v.Load5 > tCpus && v.Load15 < tCpus {
+				fmt.Printf("服务器压力警告, 较大概率堵塞预警")
+			} else if v.Load1 > tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
+				fmt.Printf("服务器严重压力警告, 已经堵塞很久了")
+			} else if v.Load1 < tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
+				fmt.Printf("堵塞正在缓解,请保持关注")
+			} else {
+				fmt.Printf("服务器正常")
+			}
+
+			time.Sleep(15 * time.Second)
+		}
 
 	}()
 
