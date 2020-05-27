@@ -15,7 +15,7 @@
 package main
 
 import (
-	"git.bitcode.work/ice/netcore/entry"
+	"github.com/ice-zzz/netcore/entry"
 )
 
 func main() {

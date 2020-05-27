@@ -21,8 +21,8 @@ import (
 	"os"
 	"syscall"
 
-	"git.bitcode.work/ice/netcore/easygo/tools"
-	network "git.bitcode.work/ice/netcore/net"
+	"github.com/ice-zzz/netcore/easygo/tools"
+	network "github.com/ice-zzz/netcore/net"
 
 	"github.com/BurntSushi/toml"
 )

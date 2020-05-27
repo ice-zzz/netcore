@@ -20,8 +20,8 @@ import (
 	"os"
 	"syscall"
 
-	"git.bitcode.work/ice/netcore/entry/conf"
 	"github.com/BurntSushi/toml"
+	"github.com/ice-zzz/netcore/entry/conf"
 )
 
 func Cli() {

@@ -21,9 +21,9 @@ import (
 	"syscall"
 	"time"
 
-	"git.bitcode.work/ice/netcore/easygo/logs"
-	"git.bitcode.work/ice/netcore/entry/conf"
-	network "git.bitcode.work/ice/netcore/net"
+	"github.com/ice-zzz/netcore/easygo/logs"
+	"github.com/ice-zzz/netcore/entry/conf"
+	network "github.com/ice-zzz/netcore/net"
 	"github.com/shirou/gopsutil/load"
 )
 

@@ -20,10 +20,10 @@ import (
 	"net"
 	"time"
 
-	"git.bitcode.work/ice/netcore/easygo/gopool"
-	"git.bitcode.work/ice/netcore/easygo/logs"
-	"git.bitcode.work/ice/netcore/easygo/netpoll"
 	"github.com/gobwas/ws"
+	"github.com/ice-zzz/netcore/easygo/gopool"
+	"github.com/ice-zzz/netcore/easygo/logs"
+	"github.com/ice-zzz/netcore/easygo/netpoll"
 )
 
 type WebSocketOption struct {

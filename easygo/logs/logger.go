@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"git.bitcode.work/ice/netcore/easygo/tools"
+	"github.com/ice-zzz/netcore/easygo/tools"
 )
 
 const (

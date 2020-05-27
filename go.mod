@@ -1,4 +1,4 @@
-module git.bitcode.work/ice/netcore
+module github.com/ice-zzz/netcore
 
 go 1.14
 

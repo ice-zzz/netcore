@@ -17,9 +17,9 @@ package network
 import (
 	"fmt"
 
-	"git.bitcode.work/ice/netcore/easygo/logs"
-	"git.bitcode.work/ice/netcore/easygo/tools"
 	"github.com/gin-gonic/gin"
+	"github.com/ice-zzz/netcore/easygo/logs"
+	"github.com/ice-zzz/netcore/easygo/tools"
 )
 
 type HttpOption struct {

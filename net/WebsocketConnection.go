@@ -24,9 +24,9 @@ import (
 	"strconv"
 	"sync"
 
-	"git.bitcode.work/ice/netcore/easygo/gopool"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
+	"github.com/ice-zzz/netcore/easygo/gopool"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -198,11 +198,11 @@ func (u *Connection) readRequest() (*MessageData, error) {
 
 	req := &MessageData{}
 	message, err := ioutil.ReadAll(r)
-	once,err := strconv.ParseUint(string(message[:16]), 16, 32)
+	once, err := strconv.ParseUint(string(message[:16]), 16, 32)
 	msgtype := uint16(message[16:17][0])
-	if once > u.once{
+	if once > u.once {
 		u.once = once
-	}else{
+	} else {
 		return nil, nil
 	}
 
