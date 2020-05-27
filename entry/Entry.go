@@ -71,18 +71,18 @@ func Create(path string) (entry *Entry, err error) {
 				logger.Info("磁盘快满了")
 			}
 			v, _ := load.Avg()
-			tCpus := float64(numCPU)
+			tCpus := float64(runtime.NumCPU())
 
 			if v.Load1 > tCpus && v.Load5 < tCpus && v.Load15 < tCpus {
-				logger.Info("服务器波动, 短期堵塞预警")
+				logger.Info("服务器波动, 短期堵塞预警\n")
 			} else if v.Load1 > tCpus && v.Load5 > tCpus && v.Load15 < tCpus {
-				logger.Info("服务器压力警告, 堵塞预警")
+				logger.Info("服务器压力警告, 堵塞预警\n")
 			} else if v.Load1 > tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
-				logger.Info("服务器严重压力警告, 已经堵塞很久了")
+				logger.Info("服务器严重压力警告, 已经堵塞很久了\n")
 			} else if v.Load1 < tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
-				logger.Info("堵塞正在缓解,请保持关注")
+				logger.Info("堵塞正在缓解,请保持关注\n")
 			} else {
-				logger.Info("服务器正常")
+				logger.Info("服务器正常\n")
 			}
 
 			time.Sleep(15 * time.Second)
