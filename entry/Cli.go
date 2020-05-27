@@ -28,17 +28,14 @@ var (
 	entry *Entry
 )
 
-func Cli() {
+func Cli() bool {
 	var isInstall = flag.Bool("install", false, "install program")
-	var isRun = flag.String("run", "-1", "run program")
+
 	flag.Parse()
 	if *isInstall {
 		install()
-	} else if *isRun != "-1" {
-		run(*isRun)
-	} else if *isRun == "-1" {
-		run("")
 	}
+	return *isInstall
 }
 
 func GetEntry() *Entry {
@@ -66,15 +63,4 @@ func install() {
 
 	fmt.Printf("%s", "安装完成...")
 
-}
-
-func run(path string) {
-
-	if e, err := Create(path); err != nil {
-		entry = e
-		fmt.Printf("启动异常: %s", err.Error())
-	} else {
-		e.Start()
-		e.ExitSignalMonitor()
-	}
 }

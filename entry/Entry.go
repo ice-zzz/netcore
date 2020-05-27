@@ -35,8 +35,8 @@ type Entry struct {
 	exitChannel chan os.Signal
 	pConfig     *conf.PlatformConfig
 
-	httpService      *network.HttpServer
-	webSocketService *network.WebSocketServer
+	HttpService      *network.HttpServer
+	WebSocketService *network.WebSocketServer
 }
 
 func Create(path string) (entry *Entry, err error) {
@@ -91,31 +91,23 @@ func Create(path string) (entry *Entry, err error) {
 	}()
 
 	// 初始化http服务
-	entry.httpService = network.CreateHttp(entry.pConfig.Http)
+	entry.HttpService = network.CreateHttp(entry.pConfig.Http)
 
 	// 初始化websocket服务
-	entry.webSocketService = network.CreateWebSocket(entry.pConfig.WebSocket)
+	entry.WebSocketService = network.CreateWebSocket(entry.pConfig.WebSocket)
 
 	return entry, nil
 }
 
 func (e *Entry) Start() {
 
-	go e.httpService.Start()
-	go e.webSocketService.Start()
+	go e.HttpService.Start()
+	go e.WebSocketService.Start()
 
 	logger.Info("服务器启动完成... \n")
 	// rendertext(writer, fmt.Sprintf("服务器启动完成"), ct.Green)
 	// 好了我累了,休息了
 
-}
-
-func (e *Entry) GetHttp() *network.HttpServer {
-	return e.httpService
-}
-
-func (e *Entry) GetWebSocket() *network.WebSocketServer {
-	return e.webSocketService
 }
 
 func (e *Entry) ExitSignalMonitor() {

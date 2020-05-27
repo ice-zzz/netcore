@@ -54,9 +54,9 @@ func ReadPlatformConfig(path string) (*PlatformConfig, error) {
 		}
 	}()
 	if path == "" {
-		path = confpath
+		path = "./config.toml"
 	}
-	platformconfig := fmt.Sprintf("%s/%s", path, "config.toml")
+	platformconfig := fmt.Sprintf("%s", path)
 	plconfig := &PlatformConfig{}
 
 	if isExists, _ := tools.PathExists(platformconfig); isExists {
@@ -68,19 +68,6 @@ func ReadPlatformConfig(path string) (*PlatformConfig, error) {
 		return plconfig, nil
 	}
 	return plconfig, errors.New("Config file is not exists! ")
-
-}
-
-func ReadConfigWithFile(path string) ([]byte, error) {
-
-	configPath := fmt.Sprintf("%s/%s.toml", confpath, path)
-
-	if isExists, _ := tools.PathExists(configPath); isExists {
-		file, _ := os.Open(configPath)
-		confBytes, _ := ioutil.ReadAll(file)
-		return confBytes, nil
-	}
-	return nil, errors.New("Config file is not exists! ")
 
 }
 

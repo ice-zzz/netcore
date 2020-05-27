@@ -15,11 +15,20 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/ice-zzz/netcore/entry"
 )
 
 func main() {
 
-	entry.Cli()
+	if entry.Cli() == false {
+		if e, err := entry.Create("./config.toml"); err != nil {
+			fmt.Printf("启动异常: %s", err.Error())
+		} else {
+			e.Start()
+			e.ExitSignalMonitor()
+		}
+	}
 
 }
