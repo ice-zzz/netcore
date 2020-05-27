@@ -53,6 +53,9 @@ func ReadPlatformConfig(path string) (*PlatformConfig, error) {
 			_ = file.Close()
 		}
 	}()
+	if path == "" {
+		path = confpath
+	}
 	platformconfig := fmt.Sprintf("%s/%s", path, "config.toml")
 	plconfig := &PlatformConfig{}
 
