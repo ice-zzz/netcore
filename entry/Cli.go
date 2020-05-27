@@ -30,12 +30,14 @@ var (
 
 func Cli() {
 	var isInstall = flag.Bool("install", false, "install program")
-	var isRun = flag.Bool("run", false, "run program")
+	var isRun = flag.String("run", "-1", "run program")
 	flag.Parse()
 	if *isInstall {
 		install()
-	} else if *isRun {
-		run()
+	} else if *isRun != "-1" {
+		run(*isRun)
+	} else if *isRun == "-1" {
+		run("")
 	}
 }
 
@@ -66,9 +68,9 @@ func install() {
 
 }
 
-func run() {
+func run(path string) {
 
-	if e, err := Create(); err != nil {
+	if e, err := Create(path); err != nil {
 		entry = e
 		fmt.Printf("启动异常: %s", err.Error())
 	} else {

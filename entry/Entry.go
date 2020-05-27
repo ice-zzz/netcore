@@ -39,9 +39,9 @@ type Entry struct {
 	webSocketService *network.WebSocketServer
 }
 
-func Create() (entry *Entry, err error) {
+func Create(path string) (entry *Entry, err error) {
 	entry = &Entry{}
-	entry.pConfig, err = conf.ReadPlatformConfig()
+	entry.pConfig, err = conf.ReadPlatformConfig(path)
 	numCPU := runtime.NumCPU()
 	if entry.pConfig.Sys.NumCPU == 0 {
 		if numCPU < 2 {
