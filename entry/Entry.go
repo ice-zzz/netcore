@@ -15,7 +15,6 @@
 package entry
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
@@ -69,21 +68,21 @@ func Create() (entry *Entry, err error) {
 		for {
 			disk := GetDiskInfo()
 			if disk.UsedPercent >= float64(85) {
-				fmt.Printf("磁盘快满了")
+				logger.Info("磁盘快满了")
 			}
 			v, _ := load.Avg()
-			tCpus := float64(runtime.NumCPU())
+			tCpus := float64(numCPU)
 
 			if v.Load1 > tCpus && v.Load5 < tCpus && v.Load15 < tCpus {
-				fmt.Printf("服务器抖动, 较小概率堵塞预警")
+				logger.Info("服务器波动, 短期堵塞预警")
 			} else if v.Load1 > tCpus && v.Load5 > tCpus && v.Load15 < tCpus {
-				fmt.Printf("服务器压力警告, 较大概率堵塞预警")
+				logger.Info("服务器压力警告, 堵塞预警")
 			} else if v.Load1 > tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
-				fmt.Printf("服务器严重压力警告, 已经堵塞很久了")
+				logger.Info("服务器严重压力警告, 已经堵塞很久了")
 			} else if v.Load1 < tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
-				fmt.Printf("堵塞正在缓解,请保持关注")
+				logger.Info("堵塞正在缓解,请保持关注")
 			} else {
-				fmt.Printf("服务器正常")
+				logger.Info("服务器正常")
 			}
 
 			time.Sleep(15 * time.Second)
