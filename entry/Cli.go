@@ -24,6 +24,10 @@ import (
 	"github.com/ice-zzz/netcore/entry/conf"
 )
 
+var (
+	entry *Entry
+)
+
 func Cli() {
 	var isInstall = flag.Bool("install", false, "install program")
 	var isRun = flag.Bool("run", false, "run program")
@@ -33,6 +37,10 @@ func Cli() {
 	} else if *isRun {
 		run()
 	}
+}
+
+func GetEntry() *Entry {
+	return entry
 }
 
 func install() {
@@ -61,6 +69,7 @@ func install() {
 func run() {
 
 	if e, err := Create(); err != nil {
+		entry = e
 		fmt.Printf("启动异常: %s", err.Error())
 	} else {
 		e.Start()
