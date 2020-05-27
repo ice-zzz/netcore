@@ -45,7 +45,7 @@ type SystemConfig struct {
 	NumCPU int `toml:"num_cpu"`
 }
 
-func ReadPlatformConfig() (*PlatformConfig, error) {
+func ReadPlatformConfig(path string) (*PlatformConfig, error) {
 	var file *os.File
 
 	defer func() {
@@ -53,7 +53,7 @@ func ReadPlatformConfig() (*PlatformConfig, error) {
 			_ = file.Close()
 		}
 	}()
-	platformconfig := fmt.Sprintf("%s/%s", confpath, "config.toml")
+	platformconfig := fmt.Sprintf("%s/%s", path, "config.toml")
 	plconfig := &PlatformConfig{}
 
 	if isExists, _ := tools.PathExists(platformconfig); isExists {
