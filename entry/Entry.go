@@ -81,8 +81,6 @@ func Create(path string) (entry *Entry, err error) {
 				logger.Info("服务器严重压力警告, 已经堵塞很久了\n")
 			} else if v.Load1 < tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
 				logger.Info("堵塞正在缓解,请保持关注\n")
-			} else {
-				logger.Info("服务器正常\n")
 			}
 
 			time.Sleep(15 * time.Second)
