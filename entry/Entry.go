@@ -36,10 +36,10 @@ var (
 type Entry struct {
 	service.Entity
 	exitChannel chan os.Signal
-	services    map[string]*service.Entity
+	services    map[string]service.Service
 }
 
-func (e *Entry) AddService(service *service.Entity) {
+func (e *Entry) AddService(service service.Service) {
 	if _, ok := e.services[service.GetServiceName()]; ok {
 		service.Stop()
 	}
