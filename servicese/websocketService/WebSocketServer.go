@@ -12,7 +12,7 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package network
+package websocketService
 
 import (
 	"fmt"
@@ -22,15 +22,15 @@ import (
 
 	"github.com/gobwas/ws"
 	"github.com/ice-zzz/netcore/easygo/gopool"
-	"github.com/ice-zzz/netcore/easygo/logs"
 	"github.com/ice-zzz/netcore/easygo/netpoll"
+	"github.com/ice-zzz/netcore/servicese/logService"
 )
 
 type WebSocketOption struct {
-	Ip   string         `toml:"ip"`
-	Port int            `toml:"port"`
-	Name string         `toml:"name"`
-	Log  logs.LogOption `toml:"log"`
+	Ip   string               `toml:"ip"`
+	Port int                  `toml:"port"`
+	Name string               `toml:"name"`
+	Log  logService.LogOption `toml:"log"`
 }
 
 type WebSocketServer struct {
@@ -38,7 +38,7 @@ type WebSocketServer struct {
 	pool   *gopool.Pool
 	poller netpoll.Poller
 	group  *Group
-	logger *logs.Logger
+	logger *logService.Logger
 	conf   WebSocketOption
 }
 
@@ -63,7 +63,7 @@ func CreateWebSocket(opt WebSocketOption) *WebSocketServer {
 
 func (webserv *WebSocketServer) Start() {
 
-	webserv.logger = logs.New(webserv.conf.Log)
+	webserv.logger = logService.New(webserv.conf.Log)
 
 	handle := func(conn net.Conn) {
 

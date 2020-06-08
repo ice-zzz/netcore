@@ -15,95 +15,61 @@
 package entry
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
 	"time"
 
-	"github.com/ice-zzz/netcore/easygo/logs"
+	"github.com/BurntSushi/toml"
 	"github.com/ice-zzz/netcore/entry/conf"
-	network "github.com/ice-zzz/netcore/net"
+	"github.com/ice-zzz/netcore/servicese/logService"
 	"github.com/shirou/gopsutil/load"
 )
 
 var (
-	logger *logs.Logger
+	logger *logService.Logger
 )
+
+type Service interface {
+	Start()
+	Stop()
+}
+
+type ServiceEntity struct {
+	Name string `toml:"name"`
+}
 
 type Entry struct {
 	exitChannel chan os.Signal
-	pConfig     *conf.PlatformConfig
-
-	HttpService      *network.HttpServer
-	WebSocketService *network.WebSocketServer
+	services    []*Service
 }
 
-func Create(path string) (entry *Entry, err error) {
+func Create() (entry *Entry) {
 	entry = &Entry{}
-	entry.pConfig, err = conf.ReadPlatformConfig(path)
+
 	numCPU := runtime.NumCPU()
-	if entry.pConfig.Sys.NumCPU == 0 {
-		if numCPU < 2 {
-			numCPU = 1
-		} else {
-			numCPU = numCPU - 1
-		}
+	if numCPU < 2 {
+		numCPU = 1
 	} else {
-		numCPU = entry.pConfig.Sys.NumCPU
+		numCPU = numCPU - 1
 	}
 	runtime.GOMAXPROCS(numCPU)
 
-	if err != nil {
-		return nil, err
-	}
 	// 初始化Entry日志
-	logger = logs.New(logs.LogOption{
+	logger = logService.New(logService.LogOption{
 		WriteToFile: false,
 		LogFilePath: "",
 		ZipTime:     0,
 	})
-	// 初始化系统监控服务
-	go func() {
-		for {
-			disk := GetDiskInfo()
-			if disk.UsedPercent >= float64(85) {
-				logger.Info("磁盘快满了")
-			}
-			v, _ := load.Avg()
-			tCpus := float64(runtime.NumCPU())
 
-			if v.Load1 > tCpus && v.Load5 < tCpus && v.Load15 < tCpus {
-				logger.Info("服务器波动, 短期堵塞预警\n")
-			} else if v.Load1 > tCpus && v.Load5 > tCpus && v.Load15 < tCpus {
-				logger.Info("服务器压力警告, 堵塞预警\n")
-			} else if v.Load1 > tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
-				logger.Info("服务器严重压力警告, 已经堵塞很久了\n")
-			} else if v.Load1 < tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
-				logger.Info("堵塞正在缓解,请保持关注\n")
-			}
-
-			time.Sleep(15 * time.Second)
-		}
-
-	}()
-
-	// 初始化http服务
-	entry.HttpService = network.CreateHttp(entry.pConfig.Http)
-
-	// 初始化websocket服务
-	entry.WebSocketService = network.CreateWebSocket(entry.pConfig.WebSocket)
-
-	return entry, nil
+	return entry
 }
 
 func (e *Entry) Start() {
 
-	go e.HttpService.Start()
-	go e.WebSocketService.Start()
-
-	logger.Info("服务器启动完成... \n")
-	// rendertext(writer, fmt.Sprintf("服务器启动完成"), ct.Green)
+	// logger.Info("服务器启动完成... \n")
 	// 好了我累了,休息了
 
 }
@@ -119,4 +85,58 @@ func (e *Entry) Stop() {
 	// TODO 保存工作
 	logger.Info("正在退出...\n")
 	e.exitChannel <- syscall.SIGINT
+}
+
+func RunSMON() {
+	go func() {
+		for {
+			disk := GetDiskInfo()
+			if disk.UsedPercent >= float64(85) {
+				logger.Info("磁盘快满了")
+			}
+			v, _ := load.Avg()
+			tCpus := float64(runtime.NumCPU())
+
+			if v.Load1 > tCpus && v.Load5 < tCpus && v.Load15 < tCpus {
+				logger.Info("服务器波动\n")
+			} else if v.Load1 > tCpus && v.Load5 > tCpus && v.Load15 < tCpus {
+				logger.Info("服务器压力警告\n")
+			} else if v.Load1 > tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
+				logger.Info("服务器严重压力警告\n")
+			} else if v.Load1 < tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
+				logger.Info("堵塞正在缓解\n")
+			}
+
+			time.Sleep(15 * time.Second)
+		}
+
+	}()
+}
+
+func ExportSystemInfo() {
+	fmt.Printf("%s", "正在读取系统数据...")
+	sys := &SYSTEM{
+		CPU:  GetCpuInfo(),
+		DISK: GetDiskInfo(),
+		NET:  GetNetInfo(),
+		HOST: GetHostInfo(),
+		MEM:  GetMemInfo(),
+	}
+	sysInfo := "./sysreport"
+	file, _ := os.OpenFile(sysInfo, syscall.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	defer func() {
+		if file != nil {
+			_ = file.Close()
+		}
+	}()
+	if err := toml.NewEncoder(file).Encode(sys); err != nil {
+		fmt.Println(err.Error())
+	}
+
+	fmt.Printf("%s", "正在创建配置文件. 如没有预配置,请填写配置文件,如有预配置文件请覆盖.")
+	// 创建配置文件
+	conf.CreatConfig()
+
+	fmt.Printf("%s", "安装完成...")
+
 }
