@@ -23,23 +23,15 @@ import (
 	"github.com/gobwas/ws"
 	"github.com/ice-zzz/netcore/easygo/gopool"
 	"github.com/ice-zzz/netcore/easygo/netpoll"
-	"github.com/ice-zzz/netcore/servicese/logService"
+	"github.com/ice-zzz/netcore/service"
 )
-
-type WebSocketOption struct {
-	Ip   string               `toml:"ip"`
-	Port int                  `toml:"port"`
-	Name string               `toml:"name"`
-	Log  logService.LogOption `toml:"log"`
-}
 
 type WebSocketServer struct {
 	exit   chan struct{}
 	pool   *gopool.Pool
 	poller netpoll.Poller
 	group  *Group
-	logger *logService.Logger
-	conf   WebSocketOption
+	service.Entity
 }
 
 type deadliner struct {
@@ -47,7 +39,7 @@ type deadliner struct {
 	t time.Duration
 }
 
-func CreateWebSocket(opt WebSocketOption) *WebSocketServer {
+func New() *WebSocketServer {
 	pool := gopool.NewPool(128, 1, 1)
 	poller, _ := netpoll.New(nil)
 	return &WebSocketServer{
@@ -55,15 +47,16 @@ func CreateWebSocket(opt WebSocketOption) *WebSocketServer {
 		pool:   pool,
 		poller: poller,
 		group:  NewGroup(pool),
-		logger: nil,
-		conf:   opt,
+		Entity: service.Entity{
+			Name: "",
+			Ip:   "0.0.0.0",
+			Port: 5678,
+		},
 	}
 
 }
 
 func (webserv *WebSocketServer) Start() {
-
-	webserv.logger = logService.New(webserv.conf.Log)
 
 	handle := func(conn net.Conn) {
 
@@ -71,7 +64,7 @@ func (webserv *WebSocketServer) Start() {
 
 		_, err := ws.Upgrade(safeConn)
 		if err != nil {
-			webserv.logger.Errorf("%s: 升级失败: %v \n", nameConn(conn), err)
+			fmt.Printf("%s: 升级失败: %v \n", nameConn(conn), err)
 			_ = conn.Close()
 			return
 		}
@@ -79,7 +72,7 @@ func (webserv *WebSocketServer) Start() {
 		user := webserv.group.Register(safeConn)
 		desc := netpoll.Must(netpoll.HandleRead(conn))
 
-		webserv.logger.Infof("用户 %s 进入 ip-> %s  \n", user.name, conn.RemoteAddr().String())
+		fmt.Printf("用户 %s 进入 ip-> %s  \n", user.name, conn.RemoteAddr().String())
 
 		_ = webserv.poller.Start(desc, func(ev netpoll.Event) {
 			if ev&(netpoll.EventReadHup|netpoll.EventHup) != 0 {
@@ -102,13 +95,13 @@ func (webserv *WebSocketServer) Start() {
 
 	}
 
-	ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", webserv.conf.Ip, webserv.conf.Port))
+	ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", webserv.Ip, webserv.Port))
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	webserv.logger.Infof("websocket 正在监听端口-> %d \n", webserv.conf.Port)
+	fmt.Printf("websocket 正在监听端口-> %d \n", webserv.Port)
 
 	acceptDesc := netpoll.Must(netpoll.HandleListener(
 		ln, netpoll.EventRead|netpoll.EventOneShot,
@@ -143,11 +136,11 @@ func (webserv *WebSocketServer) Start() {
 				goto cooldown
 			}
 
-			webserv.logger.Errorf("连接错误: %v \n", err)
+			fmt.Printf("连接错误: %v \n", err)
 
 		cooldown:
 			delay := 5 * time.Millisecond
-			webserv.logger.Errorf("连接错误: %v; %s 秒后重试! \n ", err, delay)
+			fmt.Printf("连接错误: %v; %s 秒后重试! \n ", err, delay)
 			time.Sleep(delay)
 		}
 

@@ -24,7 +24,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/ice-zzz/netcore/entry/conf"
-	"github.com/ice-zzz/netcore/servicese/logService"
+	"github.com/ice-zzz/netcore/service"
+	"github.com/ice-zzz/netcore/service/logService"
 	"github.com/shirou/gopsutil/load"
 )
 
@@ -32,18 +33,17 @@ var (
 	logger *logService.Logger
 )
 
-type Service interface {
-	Start()
-	Stop()
-}
-
-type ServiceEntity struct {
-	Name string `toml:"name"`
-}
-
 type Entry struct {
+	service.Entity
 	exitChannel chan os.Signal
-	services    []*Service
+	services    map[string]*service.Entity
+}
+
+func (e *Entry) AddService(service *service.Entity) {
+	if _, ok := e.services[service.GetServiceName()]; ok {
+		service.Stop()
+	}
+	e.services[service.GetServiceName()] = service
 }
 
 func Create() (entry *Entry) {
@@ -72,6 +72,10 @@ func (e *Entry) Start() {
 	// logger.Info("服务器启动完成... \n")
 	// 好了我累了,休息了
 
+}
+
+func (e *Entry) GetServiceName() string {
+	return e.Name
 }
 
 func (e *Entry) ExitSignalMonitor() {

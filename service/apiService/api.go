@@ -3,15 +3,16 @@ package rest
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/ice-zzz/netcore/service"
 )
 
 // Api defines a stack of Middlewares and an App.
 type Api struct {
 	stack []Middleware
 	app   App
-	ip    string
-	port  int
 	serv  *http.Server
+	service.Entity
 }
 
 // NewApi makes a new Api object. The Middleware stack is empty, and the App is nil.
@@ -19,14 +20,18 @@ func NewApi() *Api {
 	return &Api{
 		stack: []Middleware{},
 		app:   nil,
-		ip:    "0.0.0.0",
-		port:  5680,
+		serv:  nil,
+		Entity: service.Entity{
+			Name: "",
+			Ip:   "0.0.0.0",
+			Port: 5679,
+		},
 	}
 }
 
 func (api *Api) Start() {
 	api.serv = &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", api.ip, api.port),
+		Addr:    fmt.Sprintf("%s:%d", api.Ip, api.Port),
 		Handler: api.MakeHandler(),
 	}
 	_ = api.serv.ListenAndServe()
