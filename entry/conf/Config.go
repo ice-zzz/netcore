@@ -21,10 +21,8 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/ice-zzz/netcore/easygo/tools"
-	network "github.com/ice-zzz/netcore/net"
-
 	"github.com/BurntSushi/toml"
+	"github.com/ice-zzz/netcore/easygo/tools"
 )
 
 var (
@@ -36,9 +34,7 @@ var (
 // *************************************************************
 
 type PlatformConfig struct {
-	Sys       SystemConfig
-	WebSocket network.WebSocketOption
-	Http      network.HttpOption
+	Sys SystemConfig
 }
 
 type SystemConfig struct {
