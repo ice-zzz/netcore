@@ -12,7 +12,7 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package conf
+package configPlugs
 
 import (
 	"errors"
@@ -25,23 +25,37 @@ import (
 	"github.com/ice-zzz/netcore/easygo/tools"
 )
 
-var (
-	confpath = "./config"
-)
-
 // *************************************************************
 // *   平台配置
 // *************************************************************
 
-type PlatformConfig struct {
-	Sys SystemConfig
+type Config map[string]interface{}
+
+func (c *Config) Read(path string) error {
+	var file *os.File
+	defer func() {
+		if file != nil {
+			_ = file.Close()
+		}
+	}()
+	if path == "" {
+		return errors.New("文件不存在! ")
+	}
+	platformconfig := fmt.Sprintf("%s", path)
+
+	if isExists, _ := tools.PathExists(platformconfig); isExists {
+		file, _ := os.Open(platformconfig)
+		confBytes, _ := ioutil.ReadAll(file)
+		if _, err := toml.Decode(string(confBytes), c); err != nil {
+			return err
+		}
+		return nil
+	}
+	return errors.New("Config file is not exists! ")
+
 }
 
-type SystemConfig struct {
-	NumCPU int `toml:"num_cpu"`
-}
-
-func ReadPlatformConfig(path string) (*PlatformConfig, error) {
+func (c *Config) Write(path string) error {
 	var file *os.File
 
 	defer func() {
@@ -53,34 +67,10 @@ func ReadPlatformConfig(path string) (*PlatformConfig, error) {
 		path = "./config.toml"
 	}
 	platformconfig := fmt.Sprintf("%s", path)
-	plconfig := &PlatformConfig{}
-
-	if isExists, _ := tools.PathExists(platformconfig); isExists {
-		file, _ := os.Open(platformconfig)
-		confBytes, _ := ioutil.ReadAll(file)
-		if _, err := toml.Decode(string(confBytes), plconfig); err != nil {
-			return plconfig, err
-		}
-		return plconfig, nil
-	}
-	return plconfig, errors.New("Config file is not exists! ")
-
-}
-
-func CreatConfig() {
-	var file *os.File
-
-	defer func() {
-		if file != nil {
-			_ = file.Close()
-		}
-	}()
-	platformconfig := "./config.toml"
-	plconfig := &PlatformConfig{}
 
 	file, _ = os.OpenFile(platformconfig, syscall.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	if err := toml.NewEncoder(file).Encode(plconfig); err != nil {
+	if err := toml.NewEncoder(file).Encode(c); err != nil {
 		fmt.Println(err.Error())
 	}
-
+	return nil
 }

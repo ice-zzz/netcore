@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/ice-zzz/netcore/entry/conf"
 	"github.com/ice-zzz/netcore/service"
 	"github.com/ice-zzz/netcore/service/logService"
 	"github.com/shirou/gopsutil/load"
@@ -139,7 +138,7 @@ func ExportSystemInfo() {
 
 	fmt.Printf("%s", "正在创建配置文件. 如没有预配置,请填写配置文件,如有预配置文件请覆盖.")
 	// 创建配置文件
-	conf.CreatConfig()
+	// conf.CreatConfig()
 
 	fmt.Printf("%s", "安装完成...")
 

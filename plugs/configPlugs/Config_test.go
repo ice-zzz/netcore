@@ -12,24 +12,36 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package conf
+package configPlugs
 
 import (
 	"fmt"
-	"os"
-	"syscall"
 	"testing"
-
-	"github.com/BurntSushi/toml"
 )
 
-func TestReadPlatformConfig(t *testing.T) {
-	platformconfig := "./config.toml"
-	plconfig := &PlatformConfig{}
+func TestConfig_Read(t *testing.T) {
+	c := &Config{}
+	if err := c.Read("./config.toml"); err != nil {
+		fmt.Printf("%s", err.Error())
+	}
+	fmt.Println(c)
+}
 
-	file, _ := os.OpenFile(platformconfig, syscall.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	if err := toml.NewEncoder(file).Encode(plconfig); err != nil {
-		fmt.Println(err.Error())
+func TestConfig_Write(t *testing.T) {
+	c := &Config{}
+
+	(*c)["aaa"] = 11123123123
+	(*c)["bbb"] = 11123123123
+	(*c)["fff"] = 11123123123
+	(*c)["666"] = 11123123123
+	(*c)["123123"] = 11123123123
+
+	if err := c.Write("./config.toml"); err != nil {
+		fmt.Printf("%s", err.Error())
 	}
 
+	if err := c.Read("./config.toml"); err != nil {
+		fmt.Printf("%s", err.Error())
+	}
+	fmt.Println(c)
 }
