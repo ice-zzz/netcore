@@ -26,7 +26,8 @@ import (
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
-	"github.com/ice-zzz/netcore/easygo/gopool"
+	"github.com/ice-zzz/netcore/internal/gopool"
+
 	uuid "github.com/satori/go.uuid"
 )
 

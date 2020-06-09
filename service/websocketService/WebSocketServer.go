@@ -21,8 +21,9 @@ import (
 	"time"
 
 	"github.com/gobwas/ws"
-	"github.com/ice-zzz/netcore/easygo/gopool"
-	"github.com/ice-zzz/netcore/easygo/netpoll"
+	"github.com/ice-zzz/netcore/internal/gopool"
+	"github.com/ice-zzz/netcore/service/websocketService/netpoll"
+
 	"github.com/ice-zzz/netcore/service"
 )
 

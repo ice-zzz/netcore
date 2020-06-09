@@ -22,7 +22,7 @@ import (
 	"syscall"
 
 	"github.com/BurntSushi/toml"
-	"github.com/ice-zzz/netcore/easygo/file"
+	"github.com/ice-zzz/netcore/internal/filetools"
 )
 
 // *************************************************************
@@ -43,7 +43,7 @@ func (c *Config) Read(path string) error {
 	}
 	platformconfig := fmt.Sprintf("%s", path)
 
-	if isExists, _ := file.PathExists(platformconfig); isExists {
+	if isExists, _ := filetools.PathExists(platformconfig); isExists {
 		file, _ := os.Open(platformconfig)
 		confBytes, _ := ioutil.ReadAll(file)
 		if _, err := toml.Decode(string(confBytes), c); err != nil {
