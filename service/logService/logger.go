@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ice-zzz/netcore/easygo/tools"
+	"github.com/ice-zzz/netcore/internal/file"
 )
 
 const (
@@ -192,7 +192,7 @@ func ziplog(oldFile *os.File) error {
 	if err != nil {
 		return err
 	}
-	err = tools.Compress([]*os.File{zipFile}, fmt.Sprintf("%s/%s_%s.tar.gz", filePath, fileTime, fileName))
+	err = file.Compress([]*os.File{zipFile}, fmt.Sprintf("%s/%s_%s.tar.gz", filePath, fileTime, fileName))
 	if err != nil {
 		return err
 	}

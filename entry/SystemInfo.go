@@ -15,7 +15,7 @@
 package entry
 
 import (
-	"github.com/ice-zzz/netcore/internal"
+	"github.com/ice-zzz/netcore/internal/netcard"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/host"
@@ -70,7 +70,7 @@ type NetInfo struct {
 
 func GetNetInfo() []*NetInfo {
 	nets := make([]*NetInfo, 0)
-	v, _ := internal.GetNetCardsWithIPv4Addr()
+	v, _ := netcard.GetNetCardsWithIPv4Addr()
 
 	for _, vv := range v {
 		nets = append(nets, &NetInfo{

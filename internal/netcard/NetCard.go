@@ -12,7 +12,7 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package internal
+package netcard
 
 type NetCard struct {
 	name string
