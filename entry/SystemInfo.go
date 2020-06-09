@@ -15,11 +15,11 @@
 package entry
 
 import (
+	"github.com/ice-zzz/netcore/internal"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/mem"
-	"github.com/shirou/gopsutil/net"
 )
 
 type SYSTEM struct {
@@ -63,32 +63,20 @@ func GetMemInfo() *MemInfo {
 }
 
 type NetInfo struct {
-	Mtu          int      `toml:"mtu"`
-	Name         string   `toml:"name"`
-	Hardwareaddr string   `toml:"hardwareaddr"`
-	Addrs        []string `toml:"addrs"`
+	Name         string `toml:"name"`
+	Hardwareaddr string `toml:"hardwareaddr"`
+	Addrs        string `toml:"addrs"`
 }
 
 func GetNetInfo() []*NetInfo {
 	nets := make([]*NetInfo, 0)
-	v, _ := net.Interfaces()
+	v, _ := internal.GetNetCardsWithIPv4Addr()
 
 	for _, vv := range v {
-		if vv.HardwareAddr == "" {
-			continue
-		}
-		if len(vv.Addrs) <= 0 {
-			continue
-		}
-		addrs := make([]string, 0)
-		for _, address := range vv.Addrs {
-			addrs = append(addrs, address.Addr)
-		}
 		nets = append(nets, &NetInfo{
-			Mtu:          vv.MTU,
-			Name:         vv.Name,
-			Hardwareaddr: vv.HardwareAddr,
-			Addrs:        addrs,
+			Name:         vv.GetName(),
+			Hardwareaddr: vv.GetMacAddr(),
+			Addrs:        vv.GetIPv4Addr(),
 		})
 	}
 
