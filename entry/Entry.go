@@ -79,8 +79,11 @@ func (e *Entry) Start() {
 
 }
 
-func (e *Entry) GetServiceName() string {
-	return e.Name
+func (e *Entry) GetService(serviceName string) service.Service {
+	if s, ok := e.services[serviceName]; ok {
+		return s
+	}
+	return nil
 }
 
 func (e *Entry) ExitSignalMonitor() {
