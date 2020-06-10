@@ -2,10 +2,11 @@ package rest
 
 import (
 	"errors"
-	"github.com/ant0ine/go-json-rest/rest/trie"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/ice-zzz/netcore/service/apiService/trie"
 )
 
 type router struct {
