@@ -12,36 +12,48 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package configPlugs
+package websocketPlugins
 
 import (
 	"fmt"
+	"log"
 	"testing"
+	"time"
+
+	"github.com/ice-zzz/netcore/service/websocketService"
 )
 
-func TestConfig_Read(t *testing.T) {
-	c := &Config{}
-	if err := c.Read("./config.toml"); err != nil {
-		fmt.Printf("%s", err.Error())
+func TestClient_SendMessage(t *testing.T) {
+	s := websocketService.New()
+	s.AddHandler(0, func(message *websocketService.MessageData) *websocketService.MessageData {
+
+		log.Printf("%s", message.Message)
+
+		return &websocketService.MessageData{
+			MessageType: 1,
+			Message:     []byte("66666"),
+		}
+
+	})
+	s.Name = "test"
+	s.Ip = "0.0.0.0"
+	s.Port = 7777
+	go s.Start()
+
+	time.Sleep(time.Second * 3)
+	c := NewWebsocketClient("192.168.1.30:7777", "/")
+	err := c.Connect()
+	if err != nil {
+		fmt.Println(err)
 	}
-	fmt.Println(c)
-}
 
-func TestConfig_Write(t *testing.T) {
-	c := &Config{}
-
-	(*c)["aaa"] = 11123123123
-	(*c)["bbb"] = 11123123123
-	(*c)["fff"] = 11123123123
-	(*c)["666"] = 11123123123
-	(*c)["123123"] = 11123123123
-
-	if err := c.Write("./config.toml"); err != nil {
-		fmt.Printf("%s", err.Error())
+	err = c.SendMessage(0, []byte("Hellowrold"))
+	if err != nil {
+		fmt.Println(err)
 	}
 
-	if err := c.Read("./config.toml"); err != nil {
-		fmt.Printf("%s", err.Error())
+	for {
+		fmt.Print("")
 	}
-	fmt.Println(c)
+
 }
