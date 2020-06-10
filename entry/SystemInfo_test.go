@@ -15,13 +15,25 @@
 package entry
 
 import (
-	"fmt"
+	"encoding/json"
+	"log"
 	"testing"
-
-	"github.com/shirou/gopsutil/disk"
+	"time"
 )
 
-func TestDiskUsage2(t *testing.T) {
-	v, _ := disk.Usage("/")
-	fmt.Printf("%s", v)
+func TestSYSTEM_Start(t *testing.T) {
+	s := &SYSTEM{}
+	go s.Start()
+	time.Sleep(time.Second * 3)
+	sjson, err := json.Marshal(s)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(string(sjson))
+	for {
+
+		log.Printf("Total: %d MB    Used: %d MB    Free: %d MB    Percent: %f%%   \n", s.MEM.Total, s.MEM.Used, s.MEM.Free, s.MEM.UsedPercent)
+		time.Sleep(time.Second)
+
+	}
 }

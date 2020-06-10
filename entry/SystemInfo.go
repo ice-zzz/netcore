@@ -15,6 +15,8 @@
 package entry
 
 import (
+	"time"
+
 	"github.com/ice-zzz/netcore/internal/netcard"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
@@ -23,18 +25,42 @@ import (
 )
 
 type SYSTEM struct {
-	CPU  []*CpuInfo `toml:"cpu"`
-	DISK *DiskInfo  `toml:"disk"`
-	NET  []*NetInfo `toml:"net"`
-	HOST *HostInfo  `toml:"host"`
-	MEM  *MemInfo   `toml:"mem"`
+	CPU      []*CpuInfo    `json:"cpu" toml:"cpu"`
+	DISK     *DiskInfo     `json:"disk" toml:"disk"`
+	NET      []*NetInfo    `json:"net" toml:"net"`
+	HOST     *HostInfo     `json:"host" toml:"host"`
+	MEM      *MemInfo      `json:"mem" toml:"mem"`
+	exitChan chan struct{} `json:"-" toml:"-"`
+}
+
+func (s *SYSTEM) Start() {
+	s.exitChan = make(chan struct{})
+	for {
+		select {
+		case <-s.exitChan:
+			return
+		default:
+			s.CPU = GetCpuInfo()
+			s.MEM = GetMemInfo()
+			s.HOST = GetHostInfo()
+			s.NET = GetNetInfo()
+			s.DISK = GetDiskInfo()
+
+			time.Sleep(time.Second * 3)
+		}
+
+	}
+}
+
+func (s *SYSTEM) Stop() {
+	s.exitChan <- struct{}{}
 }
 
 type CpuInfo struct {
-	ModelName string  `toml:"model_name"`
-	Cores     int32   `toml:"cores"`
-	Mhz       float64 `toml:"mhz"`
-	CacheSize int32   `toml:"cache_size"`
+	ModelName string  `json:"model_name" toml:"model_name"`
+	Cores     int32   `json:"cores" toml:"cores"`
+	Mhz       float64 `json:"mhz" toml:"mhz"`
+	CacheSize int32   `json:"cache_size" toml:"cache_size"`
 }
 
 func GetCpuInfo() []*CpuInfo {
@@ -52,20 +78,27 @@ func GetCpuInfo() []*CpuInfo {
 }
 
 type MemInfo struct {
-	Total int `toml:"total"`
+	Total       int     `json:"total" toml:"total"`
+	Used        int     `json:"used" toml:"used"`
+	Free        int     `json:"free" toml:"free"`
+	UsedPercent float64 `json:"used_percent" toml:"used_percent"`
 }
 
 func GetMemInfo() *MemInfo {
 	v, _ := mem.VirtualMemory()
+
 	return &MemInfo{
-		Total: int(v.Total) / 1024 / 1024,
+		Total:       int(v.Total) / 1024 / 1024,
+		Used:        int(v.Used) / 1024 / 1024,
+		Free:        int(v.Free) / 1024 / 1024,
+		UsedPercent: v.UsedPercent,
 	}
 }
 
 type NetInfo struct {
-	Name         string `toml:"name"`
-	Hardwareaddr string `toml:"hardwareaddr"`
-	Addrs        string `toml:"addrs"`
+	Name         string `json:"name" toml:"name"`
+	Hardwareaddr string `json:"hardwareaddr" toml:"hardwareaddr"`
+	Addrs        string `json:"addrs" toml:"addrs"`
 }
 
 func GetNetInfo() []*NetInfo {
@@ -84,13 +117,13 @@ func GetNetInfo() []*NetInfo {
 }
 
 type HostInfo struct {
-	Hostname        string `toml:"hostname"`
-	OS              string `toml:"os"`
-	Platform        string `toml:"platform"`
-	PlatformVersion string `toml:"platform_version"`
-	KernelVersion   string `toml:"kernel_version"`
-	KernelArch      string `toml:"kernel_arch"`
-	Hostid          string `toml:"hostid"`
+	Hostname        string `json:"hostname" toml:"hostname"`
+	OS              string `json:"os" toml:"os"`
+	Platform        string `json:"platform" toml:"platform"`
+	PlatformVersion string `json:"platform_version" toml:"platform_version"`
+	KernelVersion   string `json:"kernel_version" toml:"kernel_version"`
+	KernelArch      string `json:"kernel_arch" toml:"kernel_arch"`
+	Hostid          string `json:"hostid" toml:"hostid"`
 }
 
 func GetHostInfo() *HostInfo {
@@ -107,11 +140,11 @@ func GetHostInfo() *HostInfo {
 }
 
 type DiskInfo struct {
-	Fstype      string  `toml:"fstype"`
-	Total       uint64  `toml:"total"`
-	Free        uint64  `toml:"free"`
-	Used        uint64  `toml:"used"`
-	UsedPercent float64 `toml:"used_percent"`
+	Fstype      string  `json:"fstype" toml:"fstype"`
+	Total       uint64  `json:"total" toml:"total"`
+	Free        uint64  `json:"free" toml:"free"`
+	Used        uint64  `json:"used" toml:"used"`
+	UsedPercent float64 `json:"used_percent" toml:"used_percent"`
 }
 
 func GetDiskInfo() *DiskInfo {

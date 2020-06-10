@@ -49,8 +49,8 @@ func findMacAddrByIp(ip string) (string, error) {
 		for _, addr := range addrs {
 			if a, ok := addr.(*net.IPNet); ok {
 				if ip == a.IP.String() {
-					fmt.Println("found one")
-					fmt.Println(i.HardwareAddr.String())
+					// fmt.Println("found one")
+					// fmt.Println(i.HardwareAddr.String())
 					return i.HardwareAddr.String(), nil
 				}
 			}
