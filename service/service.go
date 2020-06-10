@@ -18,12 +18,23 @@ type Service interface {
 	Start()
 	Stop()
 	GetServiceName() string
+	IsRunning() bool
+	SetRunningStatus(bool)
 }
 
 type Entity struct {
-	Name string `toml:"name"`
-	Ip   string `toml:"ip"`
-	Port int    `toml:"port"`
+	Name      string `toml:"name"`
+	Ip        string `toml:"ip"`
+	Port      int    `toml:"port"`
+	isRunning bool   `toml:"-"`
+}
+
+func (s *Entity) SetRunningStatus(status bool) {
+	s.isRunning = status
+}
+
+func (s *Entity) IsRunning() bool {
+	return s.isRunning
 }
 
 func (s *Entity) Start() {

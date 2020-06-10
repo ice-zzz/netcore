@@ -62,11 +62,17 @@ func Create() (entry *Entry) {
 		LogFilePath: "",
 		ZipTime:     0,
 	})
-
+	entry.services = make(map[string]service.Service)
 	return entry
 }
 
 func (e *Entry) Start() {
+	for _, srv := range e.services {
+		if srv.IsRunning() == false {
+			go srv.Start()
+			srv.SetRunningStatus(true)
+		}
+	}
 
 	// logger.Info("服务器启动完成... \n")
 	// 好了我累了,休息了
