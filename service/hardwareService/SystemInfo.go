@@ -153,9 +153,9 @@ func GetDiskInfo() *DiskInfo {
 	v, _ := disk.Usage("/")
 	return &DiskInfo{
 		Fstype:      v.Fstype,
-		Total:       v.Total,
-		Free:        v.Free,
-		Used:        v.Used,
+		Total:       v.Total / 1024 / 1024,
+		Used:        v.Used / 1024 / 1024,
+		Free:        v.Free / 1024 / 1024,
 		UsedPercent: v.UsedPercent,
 	}
 }
