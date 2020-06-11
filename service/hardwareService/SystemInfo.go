@@ -88,13 +88,13 @@ type MemInfo struct {
 
 func GetMemInfo() *MemInfo {
 	v, _ := mem.VirtualMemory()
+	mi := &MemInfo{}
+	mi.Total = int(v.Total) / 1024 / 1024
+	mi.Used = int(v.Used) / 1024 / 1024
+	mi.Free = int(v.Free) / 1024 / 1024
+	mi.UsedPercent = v.UsedPercent
 
-	return &MemInfo{
-		Total:       int(v.Total) / 1024 / 1024,
-		Used:        int(v.Used) / 1024 / 1024,
-		Free:        int(v.Free) / 1024 / 1024,
-		UsedPercent: v.UsedPercent,
-	}
+	return mi
 }
 
 type NetInfo struct {
