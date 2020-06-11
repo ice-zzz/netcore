@@ -31,8 +31,7 @@ func NewApi() *Api {
 
 func (api *Api) Start() {
 	api.serv = &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", api.Ip, api.Port),
-		Handler: api.MakeHandler(),
+		Addr: fmt.Sprintf("%s:%d", api.Ip, api.Port),
 	}
 	_ = api.serv.ListenAndServe()
 }
