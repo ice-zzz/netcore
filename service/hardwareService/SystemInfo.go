@@ -15,6 +15,7 @@
 package hardwareService
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ice-zzz/netcore/internal/netcard"
@@ -26,28 +27,30 @@ import (
 )
 
 type SYSTEM struct {
-	CPU      []*CpuInfo    `json:"cpu" toml:"cpu"`
-	DISK     *DiskInfo     `json:"disk" toml:"disk"`
-	NET      []*NetInfo    `json:"net" toml:"net"`
-	HOST     *HostInfo     `json:"host" toml:"host"`
-	MEM      *MemInfo      `json:"mem" toml:"mem"`
-	exitChan chan struct{} `json:"-" toml:"-"`
+	CPU      []*CpuInfo          `json:"cpu" toml:"cpu"`
+	DISK     *DiskInfo           `json:"disk" toml:"disk"`
+	NET      map[string]*NetInfo `json:"net" toml:"net"`
+	HOST     *HostInfo           `json:"host" toml:"host"`
+	MEM      *MemInfo            `json:"mem" toml:"mem"`
+	exitChan chan struct{}       `json:"-" toml:"-"`
 	service.Entity
 }
 
 func (s *SYSTEM) Start() {
 	s.exitChan = make(chan struct{})
+	s.CPU = GetCpuInfo()
+	s.MEM = GetMemInfo()
+	s.HOST = GetHostInfo()
+	s.NET = CreateNetInfo()
+	s.DISK = GetDiskInfo()
+
 	for {
 		select {
 		case <-s.exitChan:
 			return
 		default:
-			s.CPU = GetCpuInfo()
-			s.MEM = GetMemInfo()
-			s.HOST = GetHostInfo()
-			s.NET = GetNetInfo()
 			s.DISK = GetDiskInfo()
-
+			s.MEM = GetMemInfo()
 			time.Sleep(time.Second * 3)
 		}
 
@@ -56,6 +59,10 @@ func (s *SYSTEM) Start() {
 
 func (s *SYSTEM) Stop() {
 	s.exitChan <- struct{}{}
+}
+
+func (s *SYSTEM) GetNetSpeed(cardName string) (upspeed string, downspeed string) {
+	return fmt.Sprintf("%.2f", s.NET[cardName].anl.GetUpSpeed()), fmt.Sprintf("%.2f", s.NET[cardName].anl.GetDownSpeed())
 }
 
 type CpuInfo struct {
@@ -98,21 +105,26 @@ func GetMemInfo() *MemInfo {
 }
 
 type NetInfo struct {
-	Name         string `json:"name" toml:"name"`
-	Hardwareaddr string `json:"hardwareaddr" toml:"hardwareaddr"`
-	Addrs        string `json:"addrs" toml:"addrs"`
+	Name         string            `json:"name" toml:"name"`
+	Hardwareaddr string            `json:"hardwareaddr" toml:"hardwareaddr"`
+	Addrs        string            `json:"addrs" toml:"addrs"`
+	anl          *netcard.Analyzer `json:"-" toml:"-"`
 }
 
-func GetNetInfo() []*NetInfo {
-	nets := make([]*NetInfo, 0)
+func CreateNetInfo() map[string]*NetInfo {
+	nets := make(map[string]*NetInfo)
 	v, _ := netcard.GetNetCardsWithIPv4Addr()
 
 	for _, vv := range v {
-		nets = append(nets, &NetInfo{
+		anl := &netcard.Analyzer{}
+		anl.Init()
+		go anl.Capture()
+		nets[vv.GetName()] = &NetInfo{
 			Name:         vv.GetName(),
 			Hardwareaddr: vv.GetMacAddr(),
 			Addrs:        vv.GetIPv4Addr(),
-		})
+			anl:          anl,
+		}
 	}
 
 	return nets

@@ -15,7 +15,6 @@
 package hardwareService
 
 import (
-	"encoding/json"
 	"log"
 	"testing"
 	"time"
@@ -25,15 +24,10 @@ func TestSYSTEM_Start(t *testing.T) {
 	s := &SYSTEM{}
 	go s.Start()
 	time.Sleep(time.Second * 3)
-	sjson, err := json.Marshal(s)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println(string(sjson))
 	for {
-
-		log.Printf("Total: %d MB    Used: %d MB    Free: %d MB    Percent: %f%%   \n", s.MEM.Total, s.MEM.Used, s.MEM.Free, s.MEM.UsedPercent)
-		time.Sleep(time.Second)
+		up, down := s.GetNetSpeed("en0")
+		log.Printf("Up: %s KB    Down: %s KB  \n", up, down)
+		time.Sleep(1 * time.Second)
 
 	}
 }
