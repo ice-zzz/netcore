@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/ice-zzz/netcore/internal/netcard"
+	"github.com/ice-zzz/netcore/service"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/host"
@@ -31,6 +32,7 @@ type SYSTEM struct {
 	HOST     *HostInfo     `json:"host" toml:"host"`
 	MEM      *MemInfo      `json:"mem" toml:"mem"`
 	exitChan chan struct{} `json:"-" toml:"-"`
+	service.Entity
 }
 
 func (s *SYSTEM) Start() {
