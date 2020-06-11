@@ -15,17 +15,13 @@
 package entry
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
-	"time"
 
-	"github.com/BurntSushi/toml"
 	"github.com/ice-zzz/netcore/service"
 	"github.com/ice-zzz/netcore/service/logService"
-	"github.com/shirou/gopsutil/load"
 )
 
 var (
@@ -99,56 +95,57 @@ func (e *Entry) Stop() {
 	e.exitChannel <- syscall.SIGINT
 }
 
-func RunSMON() {
-	go func() {
-		for {
-			disk := GetDiskInfo()
-			if disk.UsedPercent >= float64(85) {
-				logger.Info("磁盘快满了")
-			}
-			v, _ := load.Avg()
-			tCpus := float64(runtime.NumCPU())
-
-			if v.Load1 > tCpus && v.Load5 < tCpus && v.Load15 < tCpus {
-				logger.Info("服务器波动\n")
-			} else if v.Load1 > tCpus && v.Load5 > tCpus && v.Load15 < tCpus {
-				logger.Info("服务器压力警告\n")
-			} else if v.Load1 > tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
-				logger.Info("服务器严重压力警告\n")
-			} else if v.Load1 < tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
-				logger.Info("堵塞正在缓解\n")
-			}
-
-			time.Sleep(15 * time.Second)
-		}
-
-	}()
-}
-
-func ExportSystemInfo() {
-	fmt.Printf("%s", "正在读取系统数据...")
-	sys := &SYSTEM{
-		CPU:  GetCpuInfo(),
-		DISK: GetDiskInfo(),
-		NET:  GetNetInfo(),
-		HOST: GetHostInfo(),
-		MEM:  GetMemInfo(),
-	}
-	sysInfo := "./sysreport"
-	file, _ := os.OpenFile(sysInfo, syscall.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	defer func() {
-		if file != nil {
-			_ = file.Close()
-		}
-	}()
-	if err := toml.NewEncoder(file).Encode(sys); err != nil {
-		fmt.Println(err.Error())
-	}
-
-	fmt.Printf("%s", "正在创建配置文件. 如没有预配置,请填写配置文件,如有预配置文件请覆盖.")
-	// 创建配置文件
-	// conf.CreatConfig()
-
-	fmt.Printf("%s", "安装完成...")
-
-}
+//
+// func RunSMON() {
+// 	go func() {
+// 		for {
+// 			disk := GetDiskInfo()
+// 			if disk.UsedPercent >= float64(85) {
+// 				logger.Info("磁盘快满了")
+// 			}
+// 			v, _ := load.Avg()
+// 			tCpus := float64(runtime.NumCPU())
+//
+// 			if v.Load1 > tCpus && v.Load5 < tCpus && v.Load15 < tCpus {
+// 				logger.Info("服务器波动\n")
+// 			} else if v.Load1 > tCpus && v.Load5 > tCpus && v.Load15 < tCpus {
+// 				logger.Info("服务器压力警告\n")
+// 			} else if v.Load1 > tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
+// 				logger.Info("服务器严重压力警告\n")
+// 			} else if v.Load1 < tCpus && v.Load5 > tCpus && v.Load15 > tCpus {
+// 				logger.Info("堵塞正在缓解\n")
+// 			}
+//
+// 			time.Sleep(15 * time.Second)
+// 		}
+//
+// 	}()
+// }
+//
+// func ExportSystemInfo() {
+// 	fmt.Printf("%s", "正在读取系统数据...")
+// 	sys := &SYSTEM{
+// 		CPU:  GetCpuInfo(),
+// 		DISK: GetDiskInfo(),
+// 		NET:  GetNetInfo(),
+// 		HOST: GetHostInfo(),
+// 		MEM:  GetMemInfo(),
+// 	}
+// 	sysInfo := "./sysreport"
+// 	file, _ := os.OpenFile(sysInfo, syscall.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+// 	defer func() {
+// 		if file != nil {
+// 			_ = file.Close()
+// 		}
+// 	}()
+// 	if err := toml.NewEncoder(file).Encode(sys); err != nil {
+// 		fmt.Println(err.Error())
+// 	}
+//
+// 	fmt.Printf("%s", "正在创建配置文件. 如没有预配置,请填写配置文件,如有预配置文件请覆盖.")
+// 	// 创建配置文件
+// 	// conf.CreatConfig()
+//
+// 	fmt.Printf("%s", "安装完成...")
+//
+// }

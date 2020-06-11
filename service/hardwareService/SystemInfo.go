@@ -12,7 +12,7 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package entry
+package hardwareService
 
 import (
 	"time"
