@@ -20,6 +20,7 @@ type Service interface {
 	GetServiceName() string
 	IsRunning() bool
 	SetRunningStatus(bool)
+	GetPort() int
 }
 
 type Entity struct {
@@ -47,4 +48,8 @@ func (s *Entity) Stop() {
 
 func (s *Entity) GetServiceName() string {
 	return s.Name
+}
+
+func (s *Entity) GetPort() int {
+	return s.Port
 }

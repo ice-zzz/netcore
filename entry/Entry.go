@@ -15,6 +15,7 @@
 package entry
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
@@ -66,6 +67,7 @@ func (e *Entry) Start() {
 	for _, srv := range e.services {
 		if srv.IsRunning() == false {
 			go srv.Start()
+			fmt.Printf("服务 < %s > 已启动,端口:%d \n", srv.GetServiceName(), srv.GetPort())
 			srv.SetRunningStatus(true)
 		}
 	}
