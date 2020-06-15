@@ -86,6 +86,11 @@ func GetCpuInfo() []*CpuInfo {
 	return cinfos
 }
 
+func GetCpuPercent() float64 {
+	percent, _ := cpu.Percent(time.Second, false)
+	return percent[0]
+}
+
 type MemInfo struct {
 	Total       int     `json:"total" toml:"total"`
 	Used        int     `json:"used" toml:"used"`

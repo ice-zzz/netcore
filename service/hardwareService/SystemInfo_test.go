@@ -52,18 +52,18 @@ func TestCreateNetInfo(t *testing.T) {
 	// 	panic(err)
 	// }
 
-	a := CreateNetInfo()
-	b := a["en0"]
-
-	fmt.Printf("Chosen device's IPv4: %s\n", b.Addrs)
-	fmt.Printf("Chosen device's MAC: %s\n", b.Hardwareaddr)
+	// a := CreateNetInfo()
+	// b := a["en0"]
+	//
+	// fmt.Printf("Chosen device's IPv4: %s\n", b.Addrs)
+	// fmt.Printf("Chosen device's MAC: %s\n", b.Hardwareaddr)
 	// go aaaa(b.Hardwareaddr)
 
 	// fmt.Println("========",b.al.Nc.GetName(),b.Hardwareaddr)
 
 	for {
 
-		fmt.Println(b.GetNetSpeed())
+		fmt.Println(GetCpuPercent())
 
 		time.Sleep(time.Second * 1)
 	}
