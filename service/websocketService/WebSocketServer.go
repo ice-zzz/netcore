@@ -102,7 +102,7 @@ func (webserv *WebSocketServer) Start() {
 		return
 	}
 
-	fmt.Printf("websocket 正在监听端口-> %d \n", webserv.Port)
+	// fmt.Printf("websocket 正在监听端口-> %d \n", webserv.Port)
 
 	acceptDesc := netpoll.Must(netpoll.HandleListener(
 		ln, netpoll.EventRead|netpoll.EventOneShot,
