@@ -15,7 +15,6 @@
 package hardwareService
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/ice-zzz/netcore/internal/netcard"
@@ -61,8 +60,9 @@ func (s *SYSTEM) Stop() {
 	s.exitChan <- struct{}{}
 }
 
-func (s *SYSTEM) GetNetSpeed(cardName string) (upspeed string, downspeed string) {
-	return fmt.Sprintf("%.2f", s.NET[cardName].anl.GetUpSpeed()), fmt.Sprintf("%.2f", s.NET[cardName].anl.GetDownSpeed())
+func (ni *NetInfo) GetNetSpeed() (upspeed float32, downspeed float32) {
+
+	return ni.al.GetUpSpeed(), ni.al.GetDownSpeed()
 }
 
 type CpuInfo struct {
@@ -105,10 +105,14 @@ func GetMemInfo() *MemInfo {
 }
 
 type NetInfo struct {
-	Name         string            `json:"name" toml:"name"`
-	Hardwareaddr string            `json:"hardwareaddr" toml:"hardwareaddr"`
-	Addrs        string            `json:"addrs" toml:"addrs"`
-	anl          *netcard.Analyzer `json:"-" toml:"-"`
+	Name               string `json:"name" toml:"name"`
+	Hardwareaddr       string `json:"hardwareaddr" toml:"hardwareaddr"`
+	Addrs              string `json:"addrs" toml:"addrs"`
+	downStreamDataSize int
+	upStreamDataSize   int
+	downSpeed          float32
+	upSpeed            float32
+	al                 *netcard.Analyzer
 }
 
 func CreateNetInfo() map[string]*NetInfo {
@@ -116,15 +120,20 @@ func CreateNetInfo() map[string]*NetInfo {
 	v, _ := netcard.GetNetCardsWithIPv4Addr()
 
 	for _, vv := range v {
-		anl := &netcard.Analyzer{}
-		anl.Init()
-		go anl.Capture()
+		if len(vv.GetMacAddr()) <= 0 {
+			continue
+		}
+		vvv := vv
+		analyzer := &netcard.Analyzer{}
+		analyzer.Init()
+		analyzer.Nc = &vvv
 		nets[vv.GetName()] = &NetInfo{
 			Name:         vv.GetName(),
 			Hardwareaddr: vv.GetMacAddr(),
 			Addrs:        vv.GetIPv4Addr(),
-			anl:          anl,
+			al:           analyzer,
 		}
+		go analyzer.Capture()
 	}
 
 	return nets

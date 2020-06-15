@@ -16,8 +16,6 @@ package netcard
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"time"
 
 	"github.com/google/gopacket"
@@ -55,7 +53,7 @@ func (anl *Analyzer) Capture() {
 
 	// 开始抓包
 	packetSource := gopacket.NewPacketSource(handler, handler.LinkType())
-	// 这种方式从channel中读数据很有意思
+
 	for packet := range packetSource.Packets() {
 		// 只获取以太网帧
 		ethernetLayer := packet.Layer(layers.LayerTypeEthernet)
@@ -81,9 +79,10 @@ func (anl *Analyzer) Capture() {
 // 每一秒计算一次该秒内的数据包大小平均值，并将下载、上传总量置零
 func (anl *Analyzer) monitor(ctx context.Context) {
 	for {
-		os.Stdout.WriteString(fmt.Sprintf("\rDown:%.2fkb/s \t Up:%.2fkb/s", float32(anl.downStreamDataSize)/1024/1, float32(anl.upStreamDataSize)/1024/1))
+		// log.Printf("\rDown:%.2fkb/s \t Up:%.2fkb/s\n", float32(anl.downStreamDataSize) / 1024 / 1, float32(anl.upStreamDataSize) / 1024 / 1)
 		anl.downSpeed = float32(anl.downStreamDataSize) / 1024 / 1
 		anl.upSpeed = float32(anl.upStreamDataSize) / 1024 / 1
+		// log.Printf("\rDown:%.2fkb/s \t Up:%.2fkb/s\n", anl.downSpeed, anl.upSpeed)
 		anl.downStreamDataSize = 0
 		anl.upStreamDataSize = 0
 
