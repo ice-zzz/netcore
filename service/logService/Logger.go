@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/ice-zzz/netcore/internal/filetools"
+	"github.com/ice-zzz/netcore/service"
 )
 
 const (
@@ -39,29 +40,20 @@ var (
 	infoFilePath  = ""
 	errorFilePath = ""
 	filePath      = ""
+	ZipTime       = 1
 )
-
-type LogOption struct {
-	WriteToFile bool   // 是否写入日志文件
-	LogFilePath string // 日志文件路径
-	ZipTime     int    // 每天几点(24小时)
-}
 
 type Logger struct {
 	writeToFile bool
 	infoFile    *os.File
 	errorFile   *os.File
+	exitChannel chan struct{}
+	service.Entity
 }
 
-func New(opt LogOption) *Logger {
-	if opt.WriteToFile == false {
-		return &Logger{
-			writeToFile: false,
-			infoFile:    nil,
-			errorFile:   nil,
-		}
-	}
-	filePath = opt.LogFilePath
+func (logger *Logger) Start() {
+
+	filePath = "./logs"
 	err := os.MkdirAll(path.Dir(filePath), 0755)
 	if err != nil {
 		fmt.Print(err)
@@ -70,16 +62,12 @@ func New(opt LogOption) *Logger {
 	infoFilePath = fmt.Sprintf("%s/info.log", filePath)
 	errorFilePath = fmt.Sprintf("%s/error.log", filePath)
 
-	infofile, _ := os.OpenFile(infoFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	errorfile, _ := os.OpenFile(errorFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logger.infoFile, _ = os.OpenFile(infoFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logger.errorFile, _ = os.OpenFile(errorFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 
-	logger := &Logger{
-		writeToFile: opt.WriteToFile,
-		infoFile:    infofile,
-		errorFile:   errorfile,
-	}
 	infoChannel = make(chan string, 8)
 	errorChannel = make(chan string, 8)
+	logger.exitChannel = make(chan struct{})
 
 	go func() {
 		for {
@@ -88,11 +76,13 @@ func New(opt LogOption) *Logger {
 				_, _ = logger.infoFile.WriteString(infostr)
 			case errorstr := <-errorChannel:
 				_, _ = logger.errorFile.WriteString(errorstr)
+			case <-logger.exitChannel:
+				return
 			default:
-				if opt.WriteToFile == false {
+				if logger.writeToFile == false {
 					continue
 				}
-				if time.Now().Hour() == opt.ZipTime { // 到保存时间
+				if time.Now().Hour() == ZipTime { // 到保存时间
 					if savedStatus == NoZip { // 未保存时
 						zip := logger.errorFile
 						logger.errorFile, _ = os.OpenFile(errorFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -107,8 +97,10 @@ func New(opt LogOption) *Logger {
 		}
 
 	}()
+}
 
-	return logger
+func (logger *Logger) Stop() {
+	logger.exitChannel <- struct{}{}
 }
 
 func zipFile(file *os.File) {
