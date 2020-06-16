@@ -22,12 +22,9 @@ import (
 	"syscall"
 
 	"github.com/ice-zzz/netcore/service"
-	"github.com/ice-zzz/netcore/service/logService"
 )
 
-var (
-	logger *logService.Logger
-)
+var ()
 
 type Entry struct {
 	service.Entity
@@ -53,12 +50,6 @@ func Create() (entry *Entry) {
 	}
 	runtime.GOMAXPROCS(numCPU)
 
-	// 初始化Entry日志
-	logger = logService.New(logService.LogOption{
-		WriteToFile: false,
-		LogFilePath: "",
-		ZipTime:     0,
-	})
 	entry.services = make(map[string]service.Service)
 	return entry
 }
@@ -87,13 +78,12 @@ func (e *Entry) GetService(serviceName string) service.Service {
 func (e *Entry) ExitSignalMonitor() {
 	e.exitChannel = make(chan os.Signal, 1)
 	signal.Notify(e.exitChannel, syscall.SIGINT, syscall.SIGTERM)
-	s := <-e.exitChannel
-	logger.Errorf("接收到%s消息, 停止服务...\n", s.String())
+	<-e.exitChannel
+
 }
 
 func (e *Entry) Stop() {
 	// TODO 保存工作
-	logger.Info("正在退出...\n")
 	e.exitChannel <- syscall.SIGINT
 }
 
