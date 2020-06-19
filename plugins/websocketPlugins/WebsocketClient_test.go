@@ -20,16 +20,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ice-zzz/netcore/manager/network"
 	"github.com/ice-zzz/netcore/service/websocketService"
 )
 
 func TestClient_SendMessage(t *testing.T) {
 	s := websocketService.New()
-	s.AddHandler(0, func(message *websocketService.MessageData) *websocketService.MessageData {
+	s.AddHandler(0, func(message *network.MessageData) *network.MessageData {
 
 		log.Printf("%s", message.Message)
 
-		return &websocketService.MessageData{
+		return &network.MessageData{
 			MessageType: 1,
 			Message:     []byte("66666"),
 		}

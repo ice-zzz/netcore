@@ -12,157 +12,42 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package websocketService
+package network
 
 import (
 	"bytes"
 	"compress/zlib"
+	"crypto/sha256"
 	"io"
 	"io/ioutil"
-	"net"
-	"sort"
+	"math"
 	"strconv"
 	"sync"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
-	"github.com/ice-zzz/netcore/internal/gopool"
-
-	uuid "github.com/satori/go.uuid"
 )
 
-type Group struct {
-	mu  sync.RWMutex
-	seq uint
-	us  []*Connection
-	ns  map[string]*Connection
-
-	pool *gopool.Pool
-	out  chan []byte
-
-	Hanlder *Handler
-}
-
-func NewGroup(pool *gopool.Pool) *Group {
-	group := &Group{
-		pool: pool,
-		ns:   make(map[string]*Connection),
-		out:  make(chan []byte, 1),
-	}
-	group.Hanlder = &Handler{}
-	group.Hanlder.Init()
-
-	go group.writer()
-
-	return group
-}
-
-// Register registers new connection as a User.
-func (c *Group) Register(conn net.Conn) *Connection {
-	user := &Connection{
-		group: c,
-		conn:  conn,
-		once:  0,
-	}
-
-	c.mu.Lock()
-	{
-		user.id = c.seq
-		user.name = c.randName()
-
-		c.us = append(c.us, user)
-		c.ns[user.name] = user
-
-		c.seq++
-	}
-	c.mu.Unlock()
-
-	return user
-}
-
-// Remove removes user from chat.
-func (c *Group) Remove(user *Connection) {
-	c.mu.Lock()
-	removed := c.remove(user)
-	c.mu.Unlock()
-
-	if !removed {
-		return
-	}
-
-}
-
-// Rename renames user.
-func (c *Group) Rename(user *Connection, name string) (prev string, ok bool) {
-	c.mu.Lock()
-	{
-		if _, has := c.ns[name]; !has {
-			ok = true
-			prev, user.name = user.name, name
-			delete(c.ns, prev)
-			c.ns[name] = user
-		}
-	}
-	c.mu.Unlock()
-
-	return prev, ok
-}
-
-// writer writes broadcast messages from chat.out channel.
-func (c *Group) writer() {
-	for bts := range c.out {
-		c.mu.RLock()
-		us := c.us
-		c.mu.RUnlock()
-
-		for _, u := range us {
-			u := u // For closure.
-			c.pool.Schedule(func() {
-				_ = u.writeRaw(bts)
-			})
-		}
-	}
-}
-
-// mutex must be held.
-func (c *Group) remove(user *Connection) bool {
-	if _, has := c.ns[user.name]; !has {
-		return false
-	}
-
-	delete(c.ns, user.name)
-
-	i := sort.Search(len(c.us), func(i int) bool {
-		return c.us[i].id >= user.id
-	})
-	if i >= len(c.us) {
-		// logger.Errorf("Group: 状态不一致")
-	}
-
-	without := make([]*Connection, len(c.us)-1)
-	copy(without[:i], c.us[:i])
-	copy(without[i:], c.us[i+1:])
-	c.us = without
-
-	return true
-}
-
-func (c *Group) randName() string {
-	return uuid.NewV4().String()
-}
+const (
+	DataSliceLength = 1400
+)
 
 type Connection struct {
 	io   sync.Mutex
 	conn io.ReadWriteCloser
 
-	id    uint
-	name  string
-	group *Group
-	once  uint64
+	id      uint
+	name    string
+	handler *Handler
+	once    uint64
 }
 
-// Receive reads next message from user's underlying connection.
-// It blocks until full message received.
+func (u *Connection) GetName() string {
+	return u.name
+}
+
+// 接收从用户的连接读取下一条消息。
+// 它会阻塞直到收到完整的消息。
 func (u *Connection) Receive() error {
 	req, err := u.readRequest()
 	if err != nil {
@@ -174,7 +59,7 @@ func (u *Connection) Receive() error {
 		return nil
 	}
 
-	md := u.group.Hanlder.Execute(req)
+	md := u.handler.Execute(req)
 	err = u.write(md)
 	if err != nil {
 		_ = u.conn.Close()
@@ -259,4 +144,52 @@ func zip(inData []byte) []byte {
 	_, _ = w.Write(inData)
 	_ = w.Close()
 	return in.Bytes()
+}
+
+func (u *Connection) EnCoder(message []byte, messageType uint16) [][]byte {
+
+	start := 0
+	end := 0
+	zippedData := message
+	// zippedData := zip(message)
+	zippedDataLength := len(zippedData)
+	zippedDataSliceNum := int(math.Ceil(float64(zippedDataLength) / float64(DataSliceLength)))
+	zippedDataSliceNum = int(math.Max(float64(zippedDataSliceNum), 1))
+
+	sendBytes := make([][]byte, zippedDataSliceNum)
+	for i := 0; i < zippedDataSliceNum; i++ {
+
+		if i*DataSliceLength < zippedDataLength {
+			if (i+1)*DataSliceLength-1 > zippedDataLength {
+				start = i * DataSliceLength
+				end = zippedDataLength
+			} else {
+				start = i * DataSliceLength
+				end = (i + 1) * DataSliceLength
+			}
+		}
+		zippedSendData := zippedData[start:end]
+		sendBytes[i] = append(sendBytes[i], byte(0xFF))
+		sendBytes[i] = append(sendBytes[i], byte(0xFF))
+		sendBytes[i] = append(sendBytes[i], byte(u.once>>8))
+		sendBytes[i] = append(sendBytes[i], byte(u.once&0xFF))
+		// sendBytes[i] = BytesCombine(sendBytes[i], []byte(sc.connId))// TODO 有状况
+		sendBytes[i] = append(sendBytes[i], byte(zippedDataSliceNum))
+		sendBytes[i] = append(sendBytes[i], byte(i))
+
+		currentLength := len(zippedSendData)
+		sendBytes[i] = append(sendBytes[i], byte(uint16(currentLength)>>8))
+		sendBytes[i] = append(sendBytes[i], byte(uint16(currentLength)&0xFF))
+
+		sha := sha256.New()
+		sha.Write(zippedSendData)
+		code := sha.Sum([]byte(nil))
+		sendBytes[i] = append(sendBytes[i], code[:16]...)
+		sendBytes[i] = append(sendBytes[i], byte(messageType))
+		sendBytes[i] = append(sendBytes[i], zippedSendData...)
+		sendBytes[i] = append(sendBytes[i], byte(0xFF))
+		sendBytes[i] = append(sendBytes[i], byte(0xFE))
+	}
+
+	return sendBytes
 }

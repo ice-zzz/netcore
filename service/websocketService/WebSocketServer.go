@@ -21,17 +21,16 @@ import (
 	"time"
 
 	"github.com/gobwas/ws"
-	"github.com/ice-zzz/netcore/internal/gopool"
-	"github.com/ice-zzz/netcore/service/websocketService/netpoll"
+	"github.com/ice-zzz/netcore/internal/netpoll"
+	"github.com/ice-zzz/netcore/manager/network"
+	"github.com/ice-zzz/netcore/utils/gopool"
 
 	"github.com/ice-zzz/netcore/service"
 )
 
 type WebSocketServer struct {
-	exit   chan struct{}
-	pool   *gopool.Pool
-	poller netpoll.Poller
-	group  *Group
+	exit chan struct{}
+	nm   *network.NetManager
 	service.Entity
 }
 
@@ -41,13 +40,10 @@ type deadliner struct {
 }
 
 func New() *WebSocketServer {
-	pool := gopool.NewPool(128, 1, 1)
-	poller, _ := netpoll.New(nil)
+
 	return &WebSocketServer{
-		exit:   make(chan struct{}),
-		pool:   pool,
-		poller: poller,
-		group:  NewGroup(pool),
+		exit: make(chan struct{}),
+		nm:   network.NewNetManager(),
 		Entity: service.Entity{
 			Name: "",
 			Ip:   "0.0.0.0",
@@ -70,27 +66,27 @@ func (webserv *WebSocketServer) Start() {
 			return
 		}
 
-		user := webserv.group.Register(safeConn)
+		user := webserv.nm.Group.Register(safeConn)
 		desc := netpoll.Must(netpoll.HandleRead(conn))
 
-		fmt.Printf("用户 %s 进入 ip-> %s  \n", user.name, conn.RemoteAddr().String())
+		fmt.Printf("用户 %s 进入 ip-> %s  \n", user.GetName(), conn.RemoteAddr().String())
 
-		_ = webserv.poller.Start(desc, func(ev netpoll.Event) {
+		_ = webserv.nm.Poller.Start(desc, func(ev netpoll.Event) {
+			// 断线处理
 			if ev&(netpoll.EventReadHup|netpoll.EventHup) != 0 {
 
-				_ = webserv.poller.Stop(desc)
-				webserv.group.Remove(user)
+				_ = webserv.nm.Poller.Stop(desc)
+				webserv.nm.Group.Remove(user)
 				return
 			}
 
-			webserv.pool.Schedule(func() {
+			webserv.nm.Pool.Schedule(func() {
 
 				if err := user.Receive(); err != nil {
 
-					_ = webserv.poller.Stop(desc)
-					webserv.group.Remove(user)
+					_ = webserv.nm.Poller.Stop(desc)
+					webserv.nm.Group.Remove(user)
 				}
-
 			})
 		})
 
@@ -114,9 +110,9 @@ func (webserv *WebSocketServer) Start() {
 
 	accept := make(chan error, 1)
 
-	_ = webserv.poller.Start(acceptDesc, func(e netpoll.Event) {
+	_ = webserv.nm.Poller.Start(acceptDesc, func(e netpoll.Event) {
 
-		err := webserv.pool.ScheduleTimeout(time.Millisecond, func() {
+		err := webserv.nm.Pool.ScheduleTimeout(time.Millisecond, func() {
 			conn, err := ln.Accept()
 			if err != nil {
 				accept <- err
@@ -145,7 +141,7 @@ func (webserv *WebSocketServer) Start() {
 			time.Sleep(delay)
 		}
 
-		_ = webserv.poller.Resume(acceptDesc)
+		_ = webserv.nm.Poller.Resume(acceptDesc)
 	})
 
 	<-webserv.exit
@@ -156,8 +152,8 @@ func (webserv *WebSocketServer) Stop() {
 	webserv.exit <- struct{}{}
 }
 
-func (webserv *WebSocketServer) AddHandler(messageType uint16, fun RecvHandler) {
-	webserv.group.Hanlder.AddHandler(messageType, fun)
+func (webserv *WebSocketServer) AddHandler(messageType uint16, fun network.RecvHandler) {
+	webserv.nm.Group.Hanlder.AddHandler(messageType, fun)
 }
 
 func nameConn(conn net.Conn) string {
@@ -176,33 +172,4 @@ func (d deadliner) Read(p []byte) (int, error) {
 		return 0, err
 	}
 	return d.Conn.Read(p)
-}
-
-type Handler struct {
-	funList map[uint16]RecvHandler
-}
-
-type RecvHandler func(message *MessageData) *MessageData
-
-func (h *Handler) Init() {
-	h.funList = make(map[uint16]RecvHandler)
-}
-
-func (h *Handler) AddHandler(messageType uint16, fun RecvHandler) {
-	h.funList[messageType] = fun
-}
-
-type MessageData struct {
-	MessageType uint16
-	Message     []byte
-}
-
-func (h *Handler) Execute(data *MessageData) *MessageData {
-	if v, ok := h.funList[data.MessageType]; ok {
-		return v(data)
-	}
-	return &MessageData{
-		MessageType: 500,
-		Message:     []byte("非法消息类型"),
-	}
 }
