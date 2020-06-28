@@ -12,7 +12,7 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package websocketService
+package socketService
 
 import (
 	"fmt"
@@ -20,16 +20,14 @@ import (
 	"net"
 	"time"
 
-	"github.com/gobwas/ws"
 	"github.com/ice-zzz/netcore/internal/netpoll"
 	"github.com/ice-zzz/netcore/manager/network"
+	"github.com/ice-zzz/netcore/service"
 	"github.com/ice-zzz/netcore/utils/gopool"
 	"github.com/segmentio/ksuid"
-
-	"github.com/ice-zzz/netcore/service"
 )
 
-type WebSocketServer struct {
+type SocketServer struct {
 	exit chan struct{}
 	nm   *network.NetManager
 	service.Entity
@@ -40,9 +38,9 @@ type deadliner struct {
 	t time.Duration
 }
 
-func New() *WebSocketServer {
+func New() *SocketServer {
 
-	return &WebSocketServer{
+	return &SocketServer{
 		exit: make(chan struct{}),
 		nm:   network.NewNetManager(),
 		Entity: service.Entity{
@@ -54,66 +52,55 @@ func New() *WebSocketServer {
 
 }
 
-func (webserv *WebSocketServer) Start() {
+func (serv *SocketServer) Start() {
 
 	handle := func(conn net.Conn) {
 
 		safeConn := deadliner{conn, time.Millisecond * 100}
 
-		_, err := ws.Upgrade(safeConn)
-		if err != nil {
-			fmt.Printf("%s: 升级失败: %v \n", nameConn(conn), err)
-			_ = conn.Close()
-			return
-		}
-
-		user := webserv.nm.Group.Register(fmt.Sprintf("%s_%s", "ws", ksuid.New().String()), safeConn)
+		user := serv.nm.Group.Register(fmt.Sprintf("%s_%s", "s", ksuid.New().String()), safeConn)
 		desc := netpoll.Must(netpoll.HandleRead(conn))
 
 		fmt.Printf("用户 %s 进入 ip-> %s  \n", user.GetName(), conn.RemoteAddr().String())
 
-		_ = webserv.nm.Poller.Start(desc, func(ev netpoll.Event) {
+		_ = serv.nm.Poller.Start(desc, func(ev netpoll.Event) {
 			// 断线处理
 			if ev&(netpoll.EventReadHup|netpoll.EventHup) != 0 {
 
-				_ = webserv.nm.Poller.Stop(desc)
-				webserv.nm.Group.Remove(user)
+				_ = serv.nm.Poller.Stop(desc)
+				serv.nm.Group.Remove(user)
 				return
 			}
 
-			webserv.nm.Pool.Schedule(func() {
+			serv.nm.Pool.Schedule(func() {
 
 				if err := user.Receive(); err != nil {
 
-					_ = webserv.nm.Poller.Stop(desc)
-					webserv.nm.Group.Remove(user)
+					_ = serv.nm.Poller.Stop(desc)
+					serv.nm.Group.Remove(user)
 				}
 			})
 		})
 
 	}
 
-	ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", webserv.Ip, webserv.Port))
+	ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", serv.Ip, serv.Port))
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	// fmt.Printf("websocket 正在监听端口-> %d \n", webserv.Port)
+	// fmt.Printf("websocket 正在监听端口-> %d \n", serv.Port)
 
 	acceptDesc := netpoll.Must(netpoll.HandleListener(
 		ln, netpoll.EventRead|netpoll.EventOneShot,
 	))
-	// webserv.EventDispatch.DispatchEvent(COMPLETE, &events.Event{
-	// 	EventType: COMPLETE,
-	// 	Data:      nil,
-	// })
 
 	accept := make(chan error, 1)
 
-	_ = webserv.nm.Poller.Start(acceptDesc, func(e netpoll.Event) {
+	_ = serv.nm.Poller.Start(acceptDesc, func(e netpoll.Event) {
 
-		err := webserv.nm.Pool.ScheduleTimeout(time.Millisecond, func() {
+		err := serv.nm.Pool.ScheduleTimeout(time.Millisecond, func() {
 			conn, err := ln.Accept()
 			if err != nil {
 				accept <- err
@@ -142,19 +129,19 @@ func (webserv *WebSocketServer) Start() {
 			time.Sleep(delay)
 		}
 
-		_ = webserv.nm.Poller.Resume(acceptDesc)
+		_ = serv.nm.Poller.Resume(acceptDesc)
 	})
 
-	<-webserv.exit
+	<-serv.exit
 
 }
 
-func (webserv *WebSocketServer) Stop() {
-	webserv.exit <- struct{}{}
+func (serv *SocketServer) Stop() {
+	serv.exit <- struct{}{}
 }
 
-func (webserv *WebSocketServer) AddHandler(messageType uint16, fun network.RecvHandler) {
-	webserv.nm.Group.Hanlder.AddHandler(messageType, fun)
+func (serv *SocketServer) AddHandler(messageType uint16, fun network.RecvHandler) {
+	serv.nm.Group.Hanlder.AddHandler(messageType, fun)
 }
 
 func nameConn(conn net.Conn) string {

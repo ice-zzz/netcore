@@ -24,8 +24,6 @@ import (
 	"github.com/ice-zzz/netcore/service"
 )
 
-var ()
-
 type Entry struct {
 	service.Entity
 	exitChannel chan os.Signal

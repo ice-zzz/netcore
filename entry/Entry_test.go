@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ice-zzz/netcore/manager/network"
 	"github.com/ice-zzz/netcore/service/websocketService"
 )
 
@@ -27,11 +28,11 @@ func TestEntry_Start(t *testing.T) {
 
 	wss := websocketService.New()
 	defer wss.Stop()
-	wss.AddHandler(0, func(message *websocketService.MessageData) *websocketService.MessageData {
+	wss.AddHandler(0, func(message *network.MessageData) *network.MessageData {
 
 		log.Printf("%s", message.Message)
 
-		return &websocketService.MessageData{
+		return &network.MessageData{
 			MessageType: 1,
 			Message:     []byte("66666"),
 		}

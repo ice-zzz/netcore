@@ -15,13 +15,16 @@
 package network
 
 import (
+	"bufio"
 	"bytes"
 	"compress/zlib"
 	"crypto/sha256"
+	"encoding/hex"
 	"io"
 	"io/ioutil"
 	"math"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/gobwas/ws"
@@ -60,7 +63,19 @@ func (u *Connection) Receive() error {
 	}
 
 	md := u.handler.Execute(req)
+	if md == nil {
+		return nil
+	}
 	err = u.write(md)
+	if err != nil {
+		_ = u.conn.Close()
+		return err
+	}
+	return nil
+}
+
+func (u *Connection) Write(md *MessageData) error {
+	err := u.write(md)
 	if err != nil {
 		_ = u.conn.Close()
 		return err
@@ -74,13 +89,25 @@ func (u *Connection) readRequest() (*MessageData, error) {
 	u.io.Lock()
 	defer u.io.Unlock()
 
-	h, r, err := wsutil.NextReader(u.conn, ws.StateServerSide)
-	if err != nil {
-		return nil, err
+	var r io.Reader
+	var err error
+
+	if strings.Split(u.name, "_")[0] == "ws" {
+		var h ws.Header
+		h, r, err = wsutil.NextReader(u.conn, ws.StateServerSide)
+		if err != nil {
+			return nil, err
+		}
+		if h.OpCode.IsControl() {
+			return nil, wsutil.ControlFrameHandler(u.conn, ws.StateServerSide)(h, r)
+		}
+	} else {
+		r = u.conn
+
 	}
-	if h.OpCode.IsControl() {
-		return nil, wsutil.ControlFrameHandler(u.conn, ws.StateServerSide)(h, r)
-	}
+
+	// var bs []byte
+	// bs, err = read(r)
 
 	req := &MessageData{}
 	message, err := ioutil.ReadAll(r)
@@ -104,6 +131,206 @@ func (u *Connection) readRequest() (*MessageData, error) {
 	req.MessageType = msgtype
 	req.Message = message[17:]
 	return req, nil
+
+}
+
+// 包格式为 0xFF|0xFF|token(s 27bit)(r 32bit)|包总数|当前数|len(高)|len(低)|MsgType|Message(zlib)|0xFF|0xFE
+// 0xFF|0xFF 起始标识符
+// token(32bit) 为随机字符,客户端需要返回 token(27)+uid(27) 并且md5(32)
+// 其中len为data的长度，实际长度为len(高)*256+len(低)
+//
+func read(reader io.Reader) ([]byte, error) {
+
+	recvCache := make(map[uint64][][]byte)
+	once := uint64(0)
+
+	// 状态机状态
+	state := 0x00
+	// 数据包长度
+	length := uint16(0)
+	msgid := uint64(0)
+	packindex := uint16(0)
+	// msgtype := uint16(0)
+
+	var (
+		recvBuffer, shaBuffer, tokenBuffer []byte
+	)
+	// 游标
+	cursor := uint16(0)
+
+	defer func() {
+		recover()
+	}()
+
+	for {
+		reader := bufio.NewReader(reader)
+		for {
+			recvByte, err := reader.ReadByte()
+			if err != nil {
+				if err == io.EOF {
+					// logger.Infof("%s 用户退出", sc.conn.RemoteAddr())
+				}
+				return nil, err
+			}
+
+			switch state {
+			case 0x00:
+				if recvByte == 0xFF {
+					state = 0x01
+					// 初始化状态机
+					recvBuffer = nil
+					length = 0
+				} else {
+					state = 0x00
+				}
+				break
+			case 0x01:
+				if recvByte == 0xFF {
+					tokenBuffer = make([]byte, 40)
+					state = 0x02
+				} else {
+					state = 0x00
+				}
+				break
+
+			case 0x02:
+				once = 0
+				once += uint64(recvByte) * 256
+				state = 0x03
+				break
+			case 0x03:
+				once += uint64(recvByte)
+				state = 0x04
+				break
+
+			case 0x04:
+				tokenBuffer[cursor] = recvByte
+				cursor++
+				if cursor == 32 {
+					// if sc.connId == fmt.Sprintf("%x", tokenBuffer) {
+					state = 0x05
+					// } else {
+					// 	state = 0x00
+					// }
+					cursor = 0
+				}
+				break
+			case 0x05:
+				t := uint16(recvByte)
+				if _, ok := recvCache[msgid]; !ok {
+					recvCache[msgid] = make([][]byte, t)
+				}
+				state = 0x06
+				break
+			case 0x06:
+				packindex = uint16(recvByte)
+				state = 0x07
+				break
+			case 0x07:
+				length += uint16(recvByte) * 256
+				state = 0x08
+				break
+			case 0x08:
+				length += uint16(recvByte)
+				// 一次申请缓存，初始化游标，准备读数据
+				recvBuffer = make([]byte, length)
+				shaBuffer = make([]byte, 16)
+				cursor = 0
+				state = 0x09
+				break
+
+			case 0x09:
+				shaBuffer[cursor] = recvByte
+				cursor++
+				if cursor == 16 {
+					state = 0x0A
+					cursor = 0
+				}
+				break
+			case 0x0A:
+				// msgtype = uint16(recvByte)
+				state = 0x0B
+				break
+			case 0x0B:
+
+				// 不断地在这个状态下读数据，直到满足长度为止
+				recvBuffer[cursor] = recvByte
+				cursor++
+				if cursor >= length {
+					recvCache[msgid][packindex] = recvBuffer
+					state = 0x0C
+				}
+			case 0x0C:
+				if recvByte == 0xFF {
+					state = 0x0D
+				} else {
+					state = 0x00
+				}
+				break
+			case 0x0D:
+				if recvByte == 0xFE {
+					sha := sha256.New()
+					sha.Write(recvBuffer)
+					code := sha.Sum(nil)
+					originalSHA := hex.EncodeToString(shaBuffer)
+					currentSHA := hex.EncodeToString(code[:16])
+					if originalSHA == currentSHA {
+						if !checkFull(recvCache[msgid]) {
+							state = 0x00
+							break
+						}
+						recvBuffer = make([]byte, 0)
+						for _, v := range recvCache[msgid] {
+							recvBuffer = append(recvBuffer, v...)
+						}
+
+						// zip
+						// zlibData := bytes.NewReader(recvBuffer)
+						// zlibReader, err := zlib.NewReader(zlibData)
+						// if err != nil {
+						// 	break
+						// }
+						// recvBuffer, err = ioutil.ReadAll(zlibReader)
+						// if err != nil {
+						// 	log.Printf("err: %s", err.Error())
+						// 	break
+						// }
+						// sc.messageInChannel <- &network.Work{
+						// 	OutChannel: sc.messageOutChannel,
+						// 	Message: &network.MessageData{
+						// 		MessageType: msgtype,
+						// 		Message:     recvBuffer,
+						// 	},
+						// }
+					}
+				}
+				// 状态机归位,接收下一个包
+
+				cursor = 0
+				state = 0x00
+				break
+			}
+
+		}
+	}
+
+}
+
+func zip(inData []byte) []byte {
+	var in bytes.Buffer
+	w := zlib.NewWriter(&in)
+	_, _ = w.Write(inData)
+	_ = w.Close()
+	return in.Bytes()
+}
+
+func checkFull(packs [][]byte) bool {
+	for _, v := range packs {
+		if v == nil {
+			return false
+		}
+	}
+	return true
 
 }
 
@@ -138,13 +365,13 @@ func (u *Connection) writeRaw(p []byte) error {
 	return err
 }
 
-func zip(inData []byte) []byte {
-	var in bytes.Buffer
-	w := zlib.NewWriter(&in)
-	_, _ = w.Write(inData)
-	_ = w.Close()
-	return in.Bytes()
-}
+// func zip(inData []byte) []byte {
+// 	var in bytes.Buffer
+// 	w := zlib.NewWriter(&in)
+// 	_, _ = w.Write(inData)
+// 	_ = w.Close()
+// 	return in.Bytes()
+// }
 
 func (u *Connection) EnCoder(message []byte, messageType uint16) [][]byte {
 

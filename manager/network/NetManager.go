@@ -68,7 +68,7 @@ func NewGroup(pool *gopool.Pool) *ConnectionGroup {
 }
 
 // Register registers new connection as a User.
-func (c *ConnectionGroup) Register(conn net.Conn) *Connection {
+func (c *ConnectionGroup) Register(name string, conn net.Conn) *Connection {
 	user := &Connection{
 		handler: c.Hanlder,
 		conn:    conn,
@@ -78,7 +78,7 @@ func (c *ConnectionGroup) Register(conn net.Conn) *Connection {
 	c.mu.Lock()
 	{
 		user.id = c.seq
-		user.name = c.randName()
+		user.name = name
 
 		c.us = append(c.us, user)
 		c.ns[user.name] = user
@@ -175,11 +175,6 @@ func (h *Handler) AddHandler(messageType uint16, fun RecvHandler) {
 	h.funList[messageType] = fun
 }
 
-type MessageData struct {
-	MessageType uint16
-	Message     []byte
-}
-
 func (h *Handler) Execute(data *MessageData) *MessageData {
 	if v, ok := h.funList[data.MessageType]; ok {
 		return v(data)
@@ -188,4 +183,9 @@ func (h *Handler) Execute(data *MessageData) *MessageData {
 		MessageType: 500,
 		Message:     []byte("非法消息类型"),
 	}
+}
+
+type MessageData struct {
+	MessageType uint16
+	Message     []byte
 }
