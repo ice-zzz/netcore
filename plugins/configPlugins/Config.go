@@ -22,7 +22,7 @@ import (
 	"syscall"
 
 	"github.com/BurntSushi/toml"
-	"github.com/ice-zzz/netcore/internal/filetools"
+	"github.com/ice-zzz/netcore/utils/filetools"
 )
 
 // *************************************************************

@@ -21,8 +21,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ice-zzz/netcore/internal/filetools"
 	"github.com/ice-zzz/netcore/service"
+	"github.com/ice-zzz/netcore/utils/filetools"
 )
 
 const (
