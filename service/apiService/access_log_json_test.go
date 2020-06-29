@@ -3,7 +3,7 @@ package rest
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ant0ine/go-json-rest/rest/test"
+	"github.com/ice-zzz/netcore/service/apiService/test"
 	"log"
 	"testing"
 )

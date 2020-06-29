@@ -1,8 +1,9 @@
 package rest
 
 import (
-	"github.com/ant0ine/go-json-rest/rest/test"
 	"testing"
+
+	"github.com/ice-zzz/netcore/service/apiService/test"
 )
 
 func TestPoweredByMiddleware(t *testing.T) {

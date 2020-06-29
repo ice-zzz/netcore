@@ -1,7 +1,7 @@
 package rest
 
 import (
-	"github.com/ant0ine/go-json-rest/rest/test"
+	"github.com/ice-zzz/netcore/service/apiService/test"
 	"testing"
 	"time"
 )

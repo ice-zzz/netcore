@@ -2,10 +2,11 @@ package rest
 
 import (
 	"bytes"
-	"github.com/ant0ine/go-json-rest/rest/test"
 	"log"
 	"regexp"
 	"testing"
+
+	"github.com/ice-zzz/netcore/service/apiService/test"
 )
 
 func TestAccessLogApacheMiddleware(t *testing.T) {
