@@ -12,39 +12,25 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package entry
+package http
 
 import (
-	"log"
+	"fmt"
 	"testing"
-	"time"
 
-	"github.com/ice-zzz/netcore/manager/network"
-	"github.com/ice-zzz/netcore/service/websocketService"
+	"github.com/gin-gonic/gin"
 )
 
-func TestEntry_Start(t *testing.T) {
-	e := Create()
-
-	wss := websocketService.New()
-	defer wss.Stop()
-	wss.AddHandler(0, func(message *network.MessageData) *network.MessageData {
-
-		log.Printf("%s", message.Message)
-
-		return &network.MessageData{
-			MessageType: 1,
-			Message:     []byte("66666"),
-		}
-
+func TestNewHttp(t *testing.T) {
+	r := gin.New()
+	g := r.Group("/api/v1", VerifySign)
+	g.Use(DefaultMiddlewares...)
+	r.POST("/ping", func(c *gin.Context) {
+		c.String(200, "pong")
 	})
-	wss.Name = "test"
-	wss.Ip = "0.0.0.0"
-	wss.Port = 7777
-	e.AddService(wss)
-	go e.Start()
-	time.Sleep(time.Second * 3)
 
-	log.Println(e.services[wss.GetServiceName()].IsRunning())
-
+	err := r.Run(fmt.Sprintf("%s:%d", IP, PORT))
+	if err != nil {
+		fmt.Println(err)
+	}
 }
