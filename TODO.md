@@ -1,4 +1,0 @@
-# NetCore_TODOs
-
-
-

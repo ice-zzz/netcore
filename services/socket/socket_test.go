@@ -12,8 +12,16 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package entry
+package socket
 
-const (
-	LOGGER = "LOGGER"
+import (
+	"testing"
+	"time"
 )
+
+func TestClientDecode(t *testing.T) {
+	go aaa()
+	time.Sleep(time.Second * 3)
+	go bbb()
+	bbb()
+}

@@ -12,36 +12,28 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package configPlugins
+package utils
 
 import (
 	"fmt"
+	"os"
 	"testing"
+	"time"
 )
 
-func TestConfig_Read(t *testing.T) {
-	c := &Config{}
-	if err := c.Read("./config.toml"); err != nil {
-		fmt.Printf("%s", err.Error())
-	}
-	fmt.Println(c)
-}
+func TestCreateFile(t *testing.T) {
 
-func TestConfig_Write(t *testing.T) {
-	c := &Config{}
-
-	(*c)["aaa"] = 11123123123
-	(*c)["bbb"] = 11123123123
-	(*c)["fff"] = 11123123123
-	(*c)["666"] = 11123123123
-	(*c)["123123"] = 11123123123
-
-	if err := c.Write("./config.toml"); err != nil {
-		fmt.Printf("%s", err.Error())
-	}
-
-	if err := c.Read("./config.toml"); err != nil {
-		fmt.Printf("%s", err.Error())
-	}
-	fmt.Println(c)
+	file, _ := CreateFile("./aaa/bbb.json")
+	file.Write([]byte("123123123123"))
+	file.Close()
+	fileTime := time.Now().Format("2006-01-02")
+	newPath := fmt.Sprintf("./aaa/errors_%s.log", fileTime)
+	_ = os.Rename("./aaa/bbb.json", newPath)
+	file, _ = os.OpenFile("./aaa/bbb.json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	oldFile, _ := os.OpenFile(newPath, os.O_WRONLY, 0644)
+	_ = Compress([]*os.File{oldFile}, fmt.Sprintf("%s_debug.tar.gz", fileTime))
+	oldFile.Close()
+	_ = os.Remove(newPath)
+	file.Write([]byte("sdfsdfsdfsdfsdf"))
+	file.Close()
 }
