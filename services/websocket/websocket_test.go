@@ -12,21 +12,35 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package services
+package websocket
 
 import (
 	"fmt"
 	"testing"
+
+	"github.com/ice-zzz/netcore/services/http"
+	"github.com/panjf2000/gnet"
 )
 
-type TestEchoCore struct {
-	*EchoCore
+func TestNewEchoServer(t *testing.T) {
+	port := 9999
+
+	tcpServer := NewEchoServer(fmt.Sprintf("0.0.0.0:%d", port))
+
+	gnet.Serve(tcpServer,
+		fmt.Sprintf("tcp://:%d", port),
+		gnet.WithMulticore(true),
+		gnet.WithCodec(&http.HttpCode{}),
+	)
+
 }
 
-func (te *TestEchoCore) Stop() {
-	fmt.Println("自己实现的哦")
-}
+func TestNewServer(t *testing.T) {
 
-func TestEchoCore_Start(t *testing.T) {
-
+	// conn, err := net.Dial("tcp", "192.168.1.30:9999")
+	// conn.Write([]byte("AAAAA"))
+	// fmt.Println(err)
+	// for {
+	//
+	// }
 }

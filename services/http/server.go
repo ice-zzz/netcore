@@ -15,22 +15,37 @@
 package http
 
 import (
-	"fmt"
-	"testing"
+	"os"
 
-	"github.com/gin-gonic/gin"
+	"github.com/panjf2000/gnet"
+	"github.com/sirupsen/logrus"
 )
 
-func TestNewHttp(t *testing.T) {
-	r := gin.New()
-	g := r.Group("/api/v1", VerifySign)
-	g.Use(DefaultMiddlewares...)
-	r.POST("/ping", func(c *gin.Context) {
-		c.String(200, "pong")
-	})
+type HttpService struct {
+	*gnet.EventServer
+	Addr        string
+	exitChannel chan os.Signal
+	logger      *logrus.Logger
+}
 
-	err := r.Run(fmt.Sprintf("%s:%d", IP, PORT))
-	if err != nil {
-		fmt.Println(err)
-	}
+func (hs *HttpService) Start() {
+}
+
+func (hs *HttpService) Stop() {
+}
+
+func (hs *HttpService) OnInitComplete(svr gnet.Server) (action gnet.Action) {
+	return
+}
+
+func (hs *HttpService) OnOpened(c gnet.Conn) (out []byte, action gnet.Action) {
+	return
+}
+
+func (hs *HttpService) OnClosed(c gnet.Conn, err error) (action gnet.Action) {
+	return
+}
+
+func (hs *HttpService) React(frame []byte, c gnet.Conn) (out []byte, action gnet.Action) {
+	return
 }

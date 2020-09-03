@@ -12,21 +12,19 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package services
+package http
 
 import (
-	"fmt"
-	"testing"
+	"net/http"
+
+	"github.com/panjf2000/gnet"
 )
 
-type TestEchoCore struct {
-	*EchoCore
-}
-
-func (te *TestEchoCore) Stop() {
-	fmt.Println("自己实现的哦")
-}
-
-func TestEchoCore_Start(t *testing.T) {
-
+type Context struct {
+	conn           gnet.Conn
+	Head           map[string]string
+	Data           []byte
+	ResponseWriter http.ResponseWriter
+	Request        *http.Request
+	Params         Params
 }

@@ -24,6 +24,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/common-nighthawk/go-figure"
+	"github.com/ice-zzz/netcore/services/http"
+	"github.com/ice-zzz/netcore/services/websocket"
 	"github.com/ice-zzz/netcore/utils"
 )
 
@@ -40,15 +42,12 @@ type Service interface {
 type Socket struct {
 }
 
-type WebSocket struct {
-}
-
 type EchoCore struct {
-	HttpService map[string]*HttpService `toml:"http_service"`
-	Socket      map[string]*Socket      `toml:"socket"`
-	WebSocket   map[string]*WebSocket   `toml:"web_socket"`
-	Mode        string                  `toml:"mode"`
-	AppName     string                  `toml:"app_name"`
+	HttpService map[string]*http.HttpService    `toml:"http_service"`
+	Socket      map[string]*Socket              `toml:"socket"`
+	WebSocket   map[string]*websocket.WebSocket `toml:"web_socket"`
+	Mode        string                          `toml:"mode"`
+	AppName     string                          `toml:"app_name"`
 }
 
 var configPath = "./config.toml"

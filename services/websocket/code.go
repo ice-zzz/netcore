@@ -12,21 +12,31 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package services
+package websocket
 
 import (
-	"fmt"
-	"testing"
+	"github.com/panjf2000/gnet"
 )
 
-type TestEchoCore struct {
-	*EchoCore
+const (
+	HttpHead = "GET / HTTP/1.1"
+)
+
+type BigCode struct {
 }
 
-func (te *TestEchoCore) Stop() {
-	fmt.Println("自己实现的哦")
+func (b BigCode) Encode(c gnet.Conn, buf []byte) ([]byte, error) {
+	panic("implement me")
 }
 
-func TestEchoCore_Start(t *testing.T) {
+func (b BigCode) Decode(c gnet.Conn) (data []byte, err error) {
+	data = c.Read()
 
+	switch c.Context().(type) {
+	case nil: //   首次进入
+
+		return
+	}
+
+	return
 }

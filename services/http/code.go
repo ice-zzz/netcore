@@ -12,21 +12,35 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package services
+package http
 
 import (
-	"fmt"
-	"testing"
+	"github.com/panjf2000/gnet"
 )
 
-type TestEchoCore struct {
-	*EchoCore
+type HttpCode struct {
 }
 
-func (te *TestEchoCore) Stop() {
-	fmt.Println("自己实现的哦")
+func (h *HttpCode) Encode(c gnet.Conn, buf []byte) ([]byte, error) {
+	panic("implement me")
 }
 
-func TestEchoCore_Start(t *testing.T) {
+func (h *HttpCode) Decode(c gnet.Conn) (data []byte, err error) {
+	data = c.Read()
+	switch svr := c.Context().(type) {
+	case nil: //   首次进入
+		c.SetContext(&Context{
+			req:  Request{Header: map[string]string{}},
+			conn: nil,
+			Head: nil,
+			Data: nil,
+		})
+		return h.Decode(c)
+	case *Context:
+		shiftN, data, err := svr.req.Parsereq(data)
+		c.ShiftN(shiftN)
+		return data, err
+	}
 
+	return
 }

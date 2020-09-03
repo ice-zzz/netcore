@@ -12,21 +12,24 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package services
+package main
 
 import (
 	"fmt"
-	"testing"
+
+	"github.com/ice-zzz/netcore/services/http"
+	"github.com/panjf2000/gnet"
 )
 
-type TestEchoCore struct {
-	*EchoCore
-}
+func main() {
+	port := 9999
 
-func (te *TestEchoCore) Stop() {
-	fmt.Println("自己实现的哦")
-}
+	tcpServer := &http.HttpServer{}
 
-func TestEchoCore_Start(t *testing.T) {
+	gnet.Serve(tcpServer,
+		fmt.Sprintf("tcp://0.0.0.0:%d", port),
+		gnet.WithMulticore(true),
+		gnet.WithCodec(&http.HttpCode{}),
+	)
 
 }

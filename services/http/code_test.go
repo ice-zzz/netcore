@@ -12,21 +12,19 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package services
+package http
 
 import (
 	"fmt"
 	"testing"
 )
 
-type TestEchoCore struct {
-	*EchoCore
+func TestHttpCode_Encode(t *testing.T) {
+	a := &Request{}
+	a.ddddd()
+	fmt.Println(a)
 }
 
-func (te *TestEchoCore) Stop() {
-	fmt.Println("自己实现的哦")
-}
-
-func TestEchoCore_Start(t *testing.T) {
-
+func (req *Request) ddddd() {
+	req.Method = "DDDDD"
 }
