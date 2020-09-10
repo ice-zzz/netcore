@@ -1,0 +1,8 @@
+mode = "debug"
+app_name = "Default"
+
+[http_service]
+
+[socket]
+
+[web_socket]

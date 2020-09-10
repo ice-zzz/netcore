@@ -12,40 +12,41 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package http
+package codec
 
 import (
-	"os"
-
 	"github.com/panjf2000/gnet"
-	"github.com/sirupsen/logrus"
 )
 
-type HttpService struct {
-	*gnet.EventServer
-	Addr        string
-	exitChannel chan os.Signal
-	logger      *logrus.Logger
+type WSCode struct {
 }
 
-func (hs *HttpService) Start() {
+func (code *WSCode) Encode(c gnet.Conn, buf []byte) ([]byte, error) {
+	return buf, nil
 }
 
-func (hs *HttpService) Stop() {
-}
+func (code *WSCode) Decode(c gnet.Conn) (data []byte, err error) {
 
-func (hs *HttpService) OnInitComplete(svr gnet.Server) (action gnet.Action) {
-	return
-}
+	switch svr := c.Context().(type) {
+	case *WSconn:
+		data = c.Read()
+		msgtype, data, err := svr.ReadMessage(data)
+		c.ShiftN(svr.ReadLength)
+		if msgtype == BinaryMessage {
+			return data, nil
+		}
+		return nil, err
+	case *Httpserver:
+		data = c.Read()
+		shift, data, err := svr.Request.Parsereq(data)
+		c.ShiftN(shift)
+		return data, err
+	case nil:
 
-func (hs *HttpService) OnOpened(c gnet.Conn) (out []byte, action gnet.Action) {
-	return
-}
-
-func (hs *HttpService) OnClosed(c gnet.Conn, err error) (action gnet.Action) {
-	return
-}
-
-func (hs *HttpService) React(frame []byte, c gnet.Conn) (out []byte, action gnet.Action) {
+		http := Httppool.Get().(*Httpserver)
+		http.c = c
+		c.SetContext(http)
+		return code.Decode(c)
+	}
 	return
 }

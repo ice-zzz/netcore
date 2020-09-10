@@ -15,21 +15,35 @@
 package main
 
 import (
-	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-	"github.com/ice-zzz/netcore/services/http"
-	"github.com/panjf2000/gnet"
+	"github.com/ice-zzz/netcore/gate"
 )
 
 func main() {
-	port := 9999
+	g := gate.Gate{
+		MaxConnNum:     2000,
+		MaxMsgLen:      64000,
+		Processor:      nil,
+		WSAddr:         "0.0.0.0:9999",
+		HTTPTimeout:    15 * time.Second,
+		TCPAddr:        "",
+		LenMsgLen:      2,
+		LittleEndian:   false,
+		LenMsgLenInMsg: false,
+		ChanStop:       false,
+	}
+	gclose := make(chan bool)
+	g.Run(gclose)
 
-	tcpServer := &http.HttpServer{}
-
-	gnet.Serve(tcpServer,
-		fmt.Sprintf("tcp://0.0.0.0:%d", port),
-		gnet.WithMulticore(true),
-		gnet.WithCodec(&http.HttpCode{}),
-	)
+	// close
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGQUIT)
+	<-c
+	gclose <- true
+	os.Exit(1)
 
 }

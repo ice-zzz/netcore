@@ -12,35 +12,54 @@
  *                                                            www.icezzz.cn
  *                                                     hanbin020706@163.com
  */
-package websocket
+package network
 
 import (
 	"fmt"
+	"log"
+	"sync"
 	"testing"
-
-	"github.com/ice-zzz/netcore/services/http"
-	"github.com/panjf2000/gnet"
+	"time"
 )
 
-func TestNewEchoServer(t *testing.T) {
-	port := 9999
+func TestTCPClient_Start(t *testing.T) {
+	c := &WSClient{
+		Mutex:            sync.Mutex{},
+		Addr:             "ws://192.168.1.30:9999/",
+		ConnNum:          1,
+		ConnectInterval:  0,
+		PendingWriteNum:  0,
+		MaxMsgLen:        64000,
+		HandshakeTimeout: 10 * time.Second,
+		AutoReconnect:    false,
+		NewAgent:         aaaa,
+	}
 
-	tcpServer := NewEchoServer(fmt.Sprintf("0.0.0.0:%d", port))
+	c.Start()
+	time.Sleep(time.Second * 2)
 
-	gnet.Serve(tcpServer,
-		fmt.Sprintf("tcp://:%d", port),
-		gnet.WithMulticore(true),
-		gnet.WithCodec(&http.HttpCode{}),
-	)
+	c.dial().WriteMsg([]byte("hello"))
+
+	for {
+		fmt.Print("")
+	}
+}
+
+func aaaa(*WSConn) Agent {
+	return testagent{}
+}
+
+type testagent struct {
+}
+
+func (t testagent) OnInit() {
 
 }
 
-func TestNewServer(t *testing.T) {
+func (t testagent) React(bytes []byte) {
+	log.Printf("%s", bytes)
+}
 
-	// conn, err := net.Dial("tcp", "192.168.1.30:9999")
-	// conn.Write([]byte("AAAAA"))
-	// fmt.Println(err)
-	// for {
-	//
-	// }
+func (t testagent) OnClose() {
+
 }
